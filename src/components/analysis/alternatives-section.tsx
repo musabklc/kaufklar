@@ -8,7 +8,7 @@ const CAT: Record<string, string> = {};
 
 export function AlternativesSection({ r }: { r: AnalysisResult }) {
   return (
-    <Section id="alternativen" eyebrow="Besser kaufen" title="Alternativen im gleichen Budget" pro>
+    <Section id="alternativen" eyebrow="Besser kaufen" title="Alternativen im gleichen Budget">
       {r.alternatives.length === 0 ? (
         <p className="flex gap-2 rounded-xl bg-muted p-3 text-sm text-muted-foreground">
           <Info className="mt-0.5 size-4 shrink-0" /> Alternativen werden von der KI vorgeschlagen. Sie sind verfügbar, sobald ein KI-Schlüssel konfiguriert ist.

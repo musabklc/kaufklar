@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Trophy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ProBadge, VERDICT, fmt } from "@/components/analysis/parts";
+import { VERDICT, fmt } from "@/components/analysis/parts";
 import { defaultMonthly } from "@/components/analysis/costs-section";
 import { compare } from "@/lib/analysis/compare";
 import { useAnalyses } from "@/lib/storage";
@@ -25,7 +25,7 @@ export default function VergleichPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight">Inserate vergleichen <ProBadge /></h1>
+      <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight">Inserate vergleichen</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Wähle 2–3 deiner Analysen. Wir sagen dir klar, welches Auto die bessere Wahl ist – und warum.</p>
 
       {list && list.length < 2 && (

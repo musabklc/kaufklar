@@ -40,7 +40,7 @@ export function CostsSection({ r }: { r: AnalysisResult }) {
     </label>
   );
   return (
-    <Section id="kosten" eyebrow="Unterhalt" title="Was kostet dich das Auto wirklich?" pro>
+    <Section id="kosten" eyebrow="Unterhalt" title="Was kostet dich das Auto wirklich?">
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <div className="flex flex-col justify-center rounded-2xl bg-primary p-6 text-primary-foreground">
           <p className="text-sm opacity-70">Laufende Kosten pro Monat</p>

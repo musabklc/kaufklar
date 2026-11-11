@@ -356,7 +356,7 @@ function PriceSection({ r, onComps }: { r: AnalysisResult; onComps: (c: number[]
   const pos = (x: number) => `${((x - lo) / (hi - lo)) * 100}%`;
   const due = r.dueCosts.reduce((s, c) => [s[0] + c.min, s[1] + c.max], [0, 0]);
   return (
-    <Section id="preis" eyebrow="Markt" title="Preisbewertung" pro action={<Button variant="outline" size="lg" className="h-10" onClick={() => setEdit(!edit)}>{edit ? "Fertig" : "Vergleichspreise bearbeiten"}</Button>}>
+    <Section id="preis" eyebrow="Markt" title="Preisbewertung" action={<Button variant="outline" size="lg" className="h-10" onClick={() => setEdit(!edit)}>{edit ? "Fertig" : "Vergleichspreise bearbeiten"}</Button>}>
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat label="Angebotspreis" value={p.asking !== null ? fmt(p.asking) : "nicht angegeben"} />
         <Stat label="Geschätzter Marktwert" value={p.marketEstimate !== null ? fmt(p.marketEstimate) : "keine Datenbasis"} muted={p.marketEstimate === null} />

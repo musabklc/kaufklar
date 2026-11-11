@@ -63,9 +63,9 @@ Link oder Screenshot → KI liest alle Daten aus → Analyse startet sofort (das
 
 Neue Tabellen anlegen: Inhalte von `supabase/migrations/*.sql` im Supabase-SQL-Editor ausführen.
 
-## Monetarisierung (vorbereitet, noch nicht aktiv)
+## Betrieb
 
-Pro-Funktionen sind in der UI mit „Pro“ markiert (Preisbewertung, Monatskosten, Alternativen, Vergleich) und in der Startphase kostenlos. Vorschlag für später: 1 Analyse gratis, „Kaufpass“ als Einmalzahlung (z. B. 14,99 € für 30 Tage), plus Partnerprovisionen (Gebrauchtwagencheck, Fahrzeughistorie, Versicherung). Ein Bezahlsystem (Stripe) ist **noch nicht eingebaut**.
+Kaufklar ist ein kostenloses, nicht-kommerzielles Projekt. Alle Funktionen sind frei nutzbar.
 
 ## Veröffentlichen (Webseite + installierbare App)
 
