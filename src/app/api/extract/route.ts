@@ -1,6 +1,7 @@
 import { AiError, getProvider } from "@/lib/ai/provider";
 import { fail, json, rateLimited, readImages } from "@/lib/server/http";
 import { fetchListingText, LinkError } from "@/lib/server/link";
+import { sealSecret, sealVehicle } from "@/lib/seal";
 
 export const maxDuration = 120;
 
@@ -27,7 +28,8 @@ export async function POST(req: Request) {
     // Ganze Zahlen erzwingen (z. B. 60 PS → 44 kW statt 44,12).
     for (const k of ["powerKw", "mileageKm", "displacementCcm", "priceEur", "previousOwners", "co2GPerKm"] as const)
       if (typeof result.vehicle[k] === "number") result.vehicle[k] = Math.round(result.vehicle[k]!);
-    return json(result);
+    // Siegel: nur so ausgelesene, unveränderte Daten dürfen später in den Preisindex.
+    return json({ ...result, seal: sealSecret() ? sealVehicle(result.vehicle, sealSecret()) : null });
   } catch (e) {
     if (e instanceof LinkError) return json({ error: e.message, code: e.code }, e.code === "INVALID" ? 400 : 422);
     if (e instanceof AiError) return fail(e.message, 502);

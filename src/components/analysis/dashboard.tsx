@@ -16,6 +16,7 @@ import { VehicleForm } from "@/components/intake/vehicle-form";
 import type { Vehicle } from "@/lib/types";
 import { parseYear } from "@/lib/analysis/knowledge";
 import { AlternativesSection } from "./alternatives-section";
+import { safeHref } from "@/lib/guards";
 import { CopyButton, LevelPill, RiskGauge, ScoreBar, Section, VERDICT, fmt, range } from "./parts";
 
 const NAV = [
@@ -334,7 +335,7 @@ function RecallsSection({ r }: { r: AnalysisResult }) {
               </div>
               <div className="text-sm sm:text-right">
                 <p className="font-semibold tabular">{c.published ? new Date(c.published).toLocaleDateString("de-DE") : ""}</p>
-                {c.url && <a href={c.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline underline-offset-4">Fall {c.case_number}</a>}
+                {safeHref(c.url) && <a href={safeHref(c.url)} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline underline-offset-4">Fall {c.case_number}</a>}
               </div>
             </li>
           ))}
@@ -349,7 +350,7 @@ function PriceSection({ r, onComps }: { r: AnalysisResult; onComps: (c: number[]
   const p = r.price;
   const [edit, setEdit] = useState(false);
   const prices = p.comps.map((c) => c.price);
-  const linked = p.comps.filter((c) => c.url);
+  const linked = p.comps.filter((c) => safeHref(c.url));
   const pts = [...prices, ...(p.asking ? [p.asking] : [])];
   const lo = Math.min(...pts) * 0.95;
   const hi = Math.max(...pts) * 1.05;

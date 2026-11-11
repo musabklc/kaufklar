@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SITE_URL } from "@/lib/site";
 import { Barlow } from "next/font/google";
 import Link from "next/link";
 import { Toaster } from "@/components/ui/sonner";
@@ -9,6 +10,7 @@ import "./globals.css";
 const sans = Barlow({ variable: "--font-sans", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Kaufklar – KI-Kaufberater für Gebrauchtwagen",
   description: "Inserat einfügen, Risiken erkennen, fair verhandeln. Unabhängige Analyse für Gebrauchtwagen in Deutschland.",
 };

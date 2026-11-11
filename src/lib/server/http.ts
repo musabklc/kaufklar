@@ -1,5 +1,6 @@
 import "server-only";
 import type { ImageInput } from "../ai/provider";
+import { sniff } from "../guards";
 
 const MAX_IMAGES = 8;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -14,6 +15,8 @@ export function rateLimited(req: Request, limit = 10, windowMs = 60_000) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";
   const key = `${new URL(req.url).pathname}|${ip}`; // Limit je Funktion – eine Analyse darf das Melden nicht sperren
   const now = Date.now();
+  // Alte Einträge löschen, damit IP-Adressen nicht länger als nötig im Speicher bleiben.
+  if (hits.size > 500) for (const [k, ts] of hits) if (now - ts[ts.length - 1] > windowMs) hits.delete(k);
   const recent = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
   recent.push(now);
   hits.set(key, recent);
@@ -35,9 +38,3 @@ export async function readImages(files: FormDataEntryValue[]): Promise<ImageInpu
   );
 }
 
-function sniff(b: Buffer): ImageInput["mediaType"] | null {
-  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
-  if (b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
-  if (b.subarray(0, 4).toString() === "RIFF" && b.subarray(8, 12).toString() === "WEBP") return "image/webp";
-  return null;
-}

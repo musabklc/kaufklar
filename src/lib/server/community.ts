@@ -24,6 +24,19 @@ export async function saveReport(row: Omit<ReportRow, "canonical_title"> & {
   if (error) throw new Error(error.message);
 }
 
+/** Älteste ungeprüfte Meldungen (z. B. weil die KI beim Eingang ausgelastet war). */
+export async function oldestPending(limit: number) {
+  if (!db) return [];
+  const { data } = await db.from("problem_reports").select("id, make, model, engine_code, year, component, description").eq("status", "pending").order("created_at").limit(limit);
+  return (data ?? []) as { id: number; make: string; model: string; engine_code: string | null; year: number | null; component: string; description: string }[];
+}
+
+export async function updateReport(id: number, patch: Record<string, unknown>) {
+  if (!db) return;
+  const { error } = await db.from("problem_reports").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 /** Wie viele Meldungen hat dieser Melder in den letzten 24 h abgegeben? (Schutz vor Massenmeldungen) */
 export async function recentReportsBy(hash: string) {
   if (!db) return 0;

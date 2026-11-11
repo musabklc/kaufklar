@@ -15,18 +15,14 @@ export interface AiProvider {
 
 export class AiError extends Error {}
 
-/** Gemini (Gratis-Tarif möglich) hat Vorrang; Claude bleibt als Alternative. */
+/** Gemini im Gratis-Tarif – ohne Schlüssel läuft die Analyse ohne KI-Teil. */
 export async function getProvider(): Promise<AiProvider | null> {
   if (process.env.GEMINI_API_KEY) {
     const { GeminiProvider } = await import("./gemini");
     return new GeminiProvider();
   }
-  if (process.env.ANTHROPIC_API_KEY) {
-    const { ClaudeProvider } = await import("./claude");
-    return new ClaudeProvider();
-  }
   return null;
 }
 
-export const aiConfigured = () => Boolean(process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY);
+export const aiConfigured = () => Boolean(process.env.GEMINI_API_KEY);
 export const webSearchEnabled = () => Boolean(process.env.GEMINI_API_KEY) && process.env.GEMINI_SEARCH_ENABLED === "true";

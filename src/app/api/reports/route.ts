@@ -1,8 +1,10 @@
 import { z } from "zod";
+import { after } from "next/server";
+import type { AiProvider } from "@/lib/ai/provider";
 import { AiError, getProvider } from "@/lib/ai/provider";
 import { COMPONENTS } from "@/lib/analysis/community";
 import { fail, json, rateLimited } from "@/lib/server/http";
-import { communityEnabled, recentReportsBy, reporterHash, saveReport } from "@/lib/server/community";
+import { communityEnabled, oldestPending, recentReportsBy, reporterHash, saveReport, updateReport } from "@/lib/server/community";
 
 export const maxDuration = 90;
 
@@ -35,22 +37,10 @@ export async function POST(req: Request) {
   if ((await recentReportsBy(hash)) >= MAX_PER_DAY) return fail("Du hast heute schon mehrere Meldungen abgegeben. Danke! Bitte morgen weiter.", 429);
 
   // KI-Moderation: ohne KI bleibt die Meldung "pending" und zählt nicht, bis sie geprüft ist.
-  let status: "approved" | "rejected" | "pending" = "pending";
-  let canonical: string | null = null;
-  let component: string = r.component;
-  let note = "KI-Moderation nicht verfügbar";
   const ai = await getProvider();
-  if (ai) {
-    try {
-      const m = await ai.moderate({ make: r.make, model: r.model, engineCode: r.engineCode ?? null, year: r.year ?? null, component: r.component, description: r.description });
-      status = m.accept && !m.containsPersonalData ? "approved" : "rejected";
-      canonical = m.canonicalTitle.trim().slice(0, 80);
-      component = m.component;
-      note = m.containsPersonalData ? `Abgelehnt: enthält personenbezogene Daten. ${m.reason}` : m.reason;
-    } catch (e) {
-      note = e instanceof AiError ? `KI-Moderation fehlgeschlagen: ${e.message}` : "KI-Moderation fehlgeschlagen";
-    }
-  }
+  const { status, canonical, component, note } = await moderate(ai, { ...r, engineCode: r.engineCode ?? null, year: r.year ?? null });
+  // Liegengebliebene Meldungen (KI war z. B. ausgelastet) nach der Antwort nachprüfen.
+  if (ai && status !== "pending") after(() => recheckPending(ai).catch((e) => console.warn("recheck failed", e)));
 
   await saveReport({
     make: r.make,
@@ -76,4 +66,39 @@ export async function POST(req: Request) {
           ? "Danke – diese Meldung können wir leider nicht übernehmen. Bitte beschreibe nur technische Probleme am Fahrzeug, ohne persönliche Daten."
           : "Danke! Deine Meldung wird geprüft, bevor sie in die Datenbank einfließt.",
   });
+}
+
+type ModInput = { make: string; model: string; engineCode: string | null; year: number | null; component: string; description: string };
+
+async function moderate(ai: AiProvider | null, r: ModInput) {
+  let status: "approved" | "rejected" | "pending" = "pending";
+  let canonical: string | null = null;
+  let component = r.component;
+  let note = "KI-Moderation nicht verfügbar";
+  if (ai) {
+    try {
+      const m = await ai.moderate(r);
+      status = m.accept && !m.containsPersonalData ? "approved" : "rejected";
+      canonical = m.canonicalTitle.trim().slice(0, 80);
+      component = m.component;
+      note = m.containsPersonalData ? `Abgelehnt: enthält personenbezogene Daten. ${m.reason}` : m.reason;
+    } catch (e) {
+      note = e instanceof AiError ? `KI-Moderation fehlgeschlagen: ${e.message}` : "KI-Moderation fehlgeschlagen";
+    }
+  }
+  return { status, canonical, component, note };
+}
+
+async function recheckPending(ai: AiProvider) {
+  for (const p of await oldestPending(3)) {
+    const m = await moderate(ai, { make: p.make, model: p.model, engineCode: p.engine_code, year: p.year, component: p.component, description: p.description });
+    if (m.status === "pending") return; // KI wieder ausgelastet – später erneut
+    await updateReport(p.id, {
+      status: m.status,
+      canonical_title: m.canonical,
+      component: m.component,
+      moderation_note: m.note.slice(0, 300),
+      ...(m.status === "rejected" ? { description: "[abgelehnt – nicht gespeichert]" } : {}),
+    });
+  }
 }

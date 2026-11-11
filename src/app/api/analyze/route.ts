@@ -9,6 +9,7 @@ import { eeaLookup } from "@/lib/server/eea";
 import { recallsFor } from "@/lib/server/recalls";
 import { communityIssuesFor } from "@/lib/server/community";
 import { fillFromEea } from "@/lib/analysis/eea-match";
+import { sealSecret, verifySeal } from "@/lib/seal";
 import { VehicleSchema, type AiAudit, type Alternative, type Comp } from "@/lib/types";
 
 export const maxDuration = 180;
@@ -18,17 +19,20 @@ const OriginSchema = z.enum(["link", "bilder", "manuell"]).catch("manuell");
 
 export async function POST(req: Request) {
   if (rateLimited(req)) return fail("Zu viele Anfragen. Bitte kurz warten.", 429);
-  let vehicle, userComps, images, origin;
+  let vehicle, userComps, images, origin, seal;
   try {
     const form = await req.formData();
     vehicle = VehicleSchema.parse(JSON.parse(String(form.get("vehicle"))));
     userComps = CompsSchema.parse(JSON.parse(String(form.get("comps") ?? "[]")));
     origin = OriginSchema.parse(form.get("origin"));
+    seal = form.get("seal");
     images = await readImages(form.getAll("images"));
   } catch (e) {
     return fail(e instanceof Error && /Bild|MB|Maximal/.test(e.message) ? e.message : "Ungültige Fahrzeugdaten.");
   }
   if (!vehicle.make) return fail("Mindestens die Marke wird für eine Analyse benötigt.");
+  // Vor der EEA-Ergänzung prüfen – das Siegel gilt für die ausgelesenen Originaldaten.
+  const sealed = origin !== "manuell" && Boolean(sealSecret()) && verifySeal(vehicle, String(seal ?? ""), sealSecret());
 
   // Offene EU-Typdaten ergänzen fehlende technische Angaben (nie überschreiben) – vor KI und Wissensdatenbank.
   const dataNotes: string[] = [];
@@ -85,7 +89,7 @@ export async function POST(req: Request) {
   );
 
   const result = buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community });
-  // Nur ausgelesene Inserate fließen in den Index – manuelle Eingaben nicht (Schutz vor Testdaten/Manipulation).
-  await recordObservations(vehicle, origin !== "manuell", web);
+  // Nur gesiegelte, unverändert ausgelesene Inserate fließen in den Index (Schutz vor erfundenen Preisen).
+  await recordObservations(vehicle, sealed, web);
   return json(result);
 }

@@ -34,7 +34,6 @@ npm test
 | `GEMINI_API_KEY` | Kostenlose KI (Auslesen von Screenshots/Links, Inserat-Prüfung, Alternativen). **Im Gratis-Tarif nutzt Google die Eingaben zur Produktverbesserung** – steht so in der Datenschutzseite. |
 | `GEMINI_MODEL` | Standard `gemini-3.8-flash`. |
 | `GEMINI_SEARCH_ENABLED` | `true` = Websuche nach Vergleichsangeboten. Nur im **bezahlten** Gemini-Tarif (5.000 Suchen/Monat inklusive). Standard `false`. |
-| `ANTHROPIC_API_KEY` | Alternative KI (kostenpflichtig); nur aktiv, wenn kein Gemini-Schlüssel gesetzt ist. |
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Kaufklar-Preisindex. Ohne sie läuft alles, nur ohne automatische Marktpreise. Secret Key nur serverseitig. |
 | `LINK_IMPORT_ENABLED` | `true` aktiviert den Link-Import: AutoScout24 und Kleinanzeigen werden direkt gelesen (getestet 11/2026); mobile.de blockt automatische Abrufe bewusst, dort führt die App zum Screenshot-Weg (Sperren werden nicht umgangen). **Nutzungsbedingungen der Portale vor öffentlichem Betrieb rechtlich prüfen.** |
 
@@ -105,7 +104,6 @@ src/
     analysis/engine.test.ts  Tests (node --test)
     ai/provider.ts           Austauschbare KI-Schnittstelle
     ai/gemini.ts             Google-Gemini-Implementierung (Gratis-Tarif, JSON-Schema, Vision, optional Websuche)
-    ai/claude.ts             Anthropic-Implementierung (Alternative)
     ai/schema.ts             zod → Gemini-JSON-Schema, tolerante Validierung
     analysis/costs.ts        Kfz-Steuer + Monatskosten
     analysis/compare.ts      Inserate-Vergleich
@@ -130,7 +128,7 @@ src/
 
 ## Datenschutz
 
-- Bilder werden nur im Arbeitsspeicher verarbeitet und an die Anthropic-API übermittelt, nicht gespeichert.
+- Bilder werden nur im Arbeitsspeicher verarbeitet und an die Gemini-API übermittelt, nicht gespeichert.
 - Analysen liegen ausschließlich im localStorage des Browsers; kein Konto, keine Server-Datenbank.
 - `src/app/datenschutz` ist ein **Entwurf** und muss vor dem Livegang fachlich geprüft und ergänzt werden (Verantwortlicher, Hosting, Impressum).
 

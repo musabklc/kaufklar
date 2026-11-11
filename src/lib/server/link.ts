@@ -1,25 +1,10 @@
 import "server-only";
 
-const ALLOWED = /^(www\.|suchen\.|m\.)?(mobile\.de|autoscout24\.de|kleinanzeigen\.de)$/;
+import { LinkError, validateListingUrl } from "../guards";
+
+export { LinkError };
+
 const MAX_BYTES = 3_000_000;
-
-export class LinkError extends Error {
-  constructor(message: string, public code: "INVALID" | "DISABLED" | "BLOCKED") {
-    super(message);
-  }
-}
-
-export function validateListingUrl(raw: string): URL {
-  let url: URL;
-  try {
-    url = new URL(raw.trim());
-  } catch {
-    throw new LinkError("Das ist kein gültiger Link.", "INVALID");
-  }
-  if (url.protocol !== "https:" || !ALLOWED.test(url.hostname))
-    throw new LinkError("Unterstützt werden Links von mobile.de, AutoScout24 und Kleinanzeigen.", "INVALID");
-  return url;
-}
 
 /**
  * Lädt die öffentliche Inseratsseite und reduziert sie auf lesbaren Text + strukturierte Daten.

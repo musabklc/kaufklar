@@ -9,7 +9,7 @@ import { saveAnalysis } from "@/lib/storage";
 import type { AnalysisResult, Extraction, Vehicle } from "@/lib/types";
 import { VehicleForm, EMPTY_VEHICLE } from "./vehicle-form";
 import { CompsInput } from "./comps-input";
-import { compressImage } from "./compress";
+import { compressImage, MAX_UPLOAD_BYTES } from "./compress";
 
 type Mode = "link" | "bilder" | "manuell";
 const MODES: { id: Mode; label: string; icon: typeof Link2 }[] = [
@@ -30,6 +30,7 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
   const [busy, setBusy] = useState<null | "extract" | "analyze">(null);
   const [error, setError] = useState<string | null>(null);
   const [origin, setOrigin] = useState<Mode>("manuell");
+  const [seal, setSeal] = useState<string | null>(null);
 
   async function addFiles(list: FileList | null) {
     if (!list) return;
@@ -48,23 +49,25 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
       body.set("url", url.trim());
     } else {
       if (!files.length) return setError("Bitte lade mindestens ein Bild hoch.");
+      if (tooBig(files)) return setError(TOO_BIG);
       files.forEach((f) => body.append("images", f));
     }
     setBusy("extract");
     try {
       const res = await fetch("/api/extract", { method: "POST", body });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) {
         setError(data.error ?? "Auslesen fehlgeschlagen.");
         if (data.code === "BLOCKED" || data.code === "DISABLED") setMode("bilder");
         return;
       }
-      const ex = data as Extraction;
+      const ex = data as unknown as Extraction & { seal: string | null };
+      setSeal(ex.seal);
       setVehicle(ex.vehicle);
       setOrigin(mode);
       setUncertain(ex.uncertainties);
       // Genug erkannt? Dann direkt analysieren – korrigieren kann man im Ergebnis.
-      if (ex.vehicle.make && ex.vehicle.model) return void (await analyze(ex.vehicle, mode));
+      if (ex.vehicle.make && ex.vehicle.model) return void (await analyze(ex.vehicle, mode, ex.seal));
       setStep("review");
       setBusy(null);
     } catch {
@@ -73,18 +76,20 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
     }
   }
 
-  async function analyze(v: Vehicle = vehicle, from: Mode = origin) {
+  async function analyze(v: Vehicle = vehicle, from: Mode = origin, s: string | null = seal) {
     setError(null);
     if (!v.make?.trim()) return setError("Bitte gib mindestens die Marke an.");
     const body = new FormData();
     body.set("vehicle", JSON.stringify(v));
     body.set("comps", JSON.stringify(comps));
     body.set("origin", from);
+    if (s) body.set("seal", s);
+    if (tooBig(files)) return setError(TOO_BIG);
     files.forEach((f) => body.append("images", f));
     setBusy("analyze");
     try {
       const res = await fetch("/api/analyze", { method: "POST", body });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) {
         setBusy(null);
         setStep("review");
@@ -219,7 +224,7 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
             <p>
               Gib die Fahrzeugdaten selbst ein. Die Analyse mit Wissensdatenbank, Checklisten und Verhandlungshilfe funktioniert auch ohne KI-Auslesen.
             </p>
-            <Button size="lg" className="h-12 w-full text-base" onClick={() => (setVehicle(EMPTY_VEHICLE), setUncertain([]), setOrigin("manuell"), setStep("review"))}>
+            <Button size="lg" className="h-12 w-full text-base" onClick={() => (setVehicle(EMPTY_VEHICLE), setUncertain([]), setOrigin("manuell"), setSeal(null), setStep("review"))}>
               Daten eingeben <ArrowRight />
             </Button>
           </div>
@@ -253,6 +258,18 @@ function Thumbs({ files, onRemove }: { files: File[]; onRemove: (i: number) => v
       ))}
     </ul>
   );
+}
+
+const TOO_BIG = "Die Bilder sind zusammen zu groß. Bitte entferne ein oder zwei Bilder – 2–4 Screenshots reichen meist.";
+const tooBig = (files: File[]) => files.reduce((sum, f) => sum + f.size, 0) > MAX_UPLOAD_BYTES;
+
+/** Antwort lesen – auch wenn Vercel statt JSON eine Fehlerseite schickt (z. B. 413 bei zu großen Uploads). */
+export async function readJson(res: Response): Promise<{ error?: string; code?: string } & Record<string, unknown>> {
+  try {
+    return await res.json();
+  } catch {
+    return { error: res.status === 413 ? TOO_BIG : `Der Server hat nicht geantwortet (Fehler ${res.status}). Bitte versuche es gleich noch einmal.` };
+  }
 }
 
 export function ErrorNote({ text, tone = "error" }: { text: string; tone?: "error" | "info" }) {

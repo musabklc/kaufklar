@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { COMPONENTS } from "@/lib/analysis/community";
+import { readJson } from "@/components/intake/intake-flow";
 
 type Initial = { make?: string | null; model?: string | null; engineCode?: string | null; year?: number | null };
 
@@ -40,7 +41,7 @@ export function ReportForm({ initial = {} }: { initial?: Initial }) {
           description: f.description, mileageKm: toInt(f.mileageKm), costEur: toInt(f.costEur), website: f.website,
         }),
       });
-      const data = await res.json();
+      const data = (await readJson(res)) as { message?: string; error?: string; status?: string };
       setState({ busy: false, msg: data.message ?? data.error ?? "Unbekannter Fehler.", ok: res.ok && data.status !== "rejected" });
       if (res.ok && data.status !== "rejected") setF({ ...f, description: "", mileageKm: "", costEur: "" });
     } catch {
