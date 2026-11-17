@@ -1,4 +1,4 @@
-# Kaufklar – Markenrichtlinien
+# Tachoklar – Markenrichtlinien
 
 ## Positionierung
 Der unabhängige Kaufberater, der beim Gebrauchtwagenkauf Klarheit schafft – wie ein erfahrener Freund aus der Werkstatt, nicht wie ein Verkäufer.

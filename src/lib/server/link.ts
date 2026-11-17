@@ -55,7 +55,7 @@ async function fetchPage(start: URL): Promise<{ res: Response | null; url: URL }
     res = await fetch(url, {
       redirect: "manual",
       signal: AbortSignal.timeout(10_000),
-      headers: { "user-agent": "Mozilla/5.0 (compatible; Kaufklar/1.0)", "accept-language": "de-DE,de;q=0.9" },
+      headers: { "user-agent": "Mozilla/5.0 (compatible; Tachoklar/1.0)", "accept-language": "de-DE,de;q=0.9" },
     });
     const loc = res.headers.get("location");
     if (res.status >= 300 && res.status < 400 && loc) {

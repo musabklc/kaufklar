@@ -1,13 +1,13 @@
 import { KNOWLEDGE } from "@/lib/analysis/knowledge";
 import { ProvenanceLegend } from "@/components/analysis/provenance";
 
-export const metadata = { title: "Methodik & Quellen – Kaufklar" };
+export const metadata = { title: "Methodik & Quellen – Tachoklar" };
 
 export default function Methodik() {
   return (
     <article className="mx-auto max-w-3xl space-y-5 px-4 py-12 text-sm leading-relaxed sm:px-6 [&_h2]:mt-10 [&_h2]:text-lg [&_h2]:font-semibold">
       <h1 className="text-3xl font-semibold tracking-tight">Methodik & Quellen</h1>
-      <p className="text-muted-foreground">So entsteht eine Kaufklar-Analyse – nachvollziehbar und ohne erfundene Daten.</p>
+      <p className="text-muted-foreground">So entsteht eine Tachoklar-Analyse – nachvollziehbar und ohne erfundene Daten.</p>
 
       <h2>Kennzeichnung jeder Aussage</h2>
       <ProvenanceLegend />
@@ -39,9 +39,9 @@ export default function Methodik() {
       <p>Höher = riskanter. Gewichtung: technisches Risiko 40 %, Zustand 25 %, Inserat-Transparenz 20 %, Preisrisiko 15 %. Nicht bewertbare Teile werden neutral angesetzt und so ausgewiesen.</p>
       <p>Die Kaufempfehlung folgt nicht allein dem Score: Einzelne kritische Punkte (z. B. Export-/Bastlerhinweise oder bekannte schwere Schwachstellen ohne Nachweis) wirken direkt.</p>
 
-      <h2>5. Preise & Kaufklar-Preisindex</h2>
+      <h2>5. Preise & Tachoklar-Preisindex</h2>
       <p>
-        Einen Marktwert schätzen wir nur aus mindestens drei Vergleichsangeboten (Median, fairer Bereich = mittlere 50 %). Quellen: der Kaufklar-Preisindex aus anonym gespeicherten,
+        Einen Marktwert schätzen wir nur aus mindestens drei Vergleichsangeboten (Median, fairer Bereich = mittlere 50 %). Quellen: der Tachoklar-Preisindex aus anonym gespeicherten,
         ausgelesenen Inseraten (gleiches Modell, Baujahr ±2, Kilometerstand ±40 %, letzte 18 Monate, Ausreißer gefiltert), aktuelle Angebote aus einer Kleinanzeigen-Suche (jedes Inserat einzeln geöffnet, Preis dort abgelesen), und von dir eingetragene Preise.
         Ohne genug Vergleichsdaten nennen wir keinen Marktwert.
       </p>
@@ -58,7 +58,7 @@ export default function Methodik() {
         Offizielle Pkw-Rückrufe gleichen wir über die Typgenehmigungsnummer bzw. den Modellnamen und den Produktionszeitraum ab.
       </p>
 
-      <h2>8. Kaufklar-Community</h2>
+      <h2>8. Tachoklar-Community</h2>
       <p>
         Nutzer können Probleme melden. Jede Meldung wird automatisch geprüft (Spam, persönliche Daten, Plausibilität) und einem einheitlichen Problemtitel zugeordnet.
         In Analysen erscheint ein Problem erst, wenn mindestens drei verschiedene Personen es unabhängig gemeldet haben – gekennzeichnet als „Von Nutzern gemeldet“.
@@ -70,7 +70,7 @@ export default function Methodik() {
         <li><a className="text-brand underline-offset-4 hover:underline" href="https://www.kba.de" target="_blank" rel="noopener noreferrer">Kraftfahrt-Bundesamt</a> – Rückrufdatenbank (per FIN prüfen)</li>
         <li><a className="text-brand underline-offset-4 hover:underline" href="https://www.eea.europa.eu/en/datahub/datahubitem-view/fa8b1229-3db6-495d-b18e-9c9b3267c02b" target="_blank" rel="noopener noreferrer">Europäische Umweltagentur (EEA)</a> – CO₂-Monitoring Pkw, CC BY 4.0</li>
         <li><a className="text-brand underline-offset-4 hover:underline" href="https://ec.europa.eu/safety-gate-alerts/screen/webReport" target="_blank" rel="noopener noreferrer">EU Safety Gate</a> (Europäische Kommission) – Rückrufe, CC BY 4.0</li>
-        <li>Meldungen der Kaufklar-Nutzer (moderiert, anonym)</li>
+        <li>Meldungen der Tachoklar-Nutzer (moderiert, anonym)</li>
         <li>Herstellervorgaben laut Serviceheft / Wartungsplan</li>
         <li>Erfahrungswerte unabhängiger Werkstätten (nicht amtlich)</li>
       </ul>

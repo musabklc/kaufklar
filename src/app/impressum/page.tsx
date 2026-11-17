@@ -1,4 +1,4 @@
-export const metadata = { title: "Impressum – Kaufklar" };
+export const metadata = { title: "Impressum – Tachoklar" };
 
 export default function Impressum() {
   return (
@@ -16,12 +16,12 @@ export default function Impressum() {
         E-Mail: <a className="text-brand underline underline-offset-4" href="mailto:musabkilic38@gmail.com">musabkilic38@gmail.com</a>
       </p>
       <h2>Art des Angebots</h2>
-      <p>Kaufklar ist ein privates, nicht-kommerzielles und kostenloses Hilfsangebot für Gebrauchtwagenkäufer. Es gibt keine kostenpflichtigen Leistungen und keine Werbung.</p>
+      <p>Tachoklar ist ein privates, nicht-kommerzielles und kostenloses Hilfsangebot für Gebrauchtwagenkäufer. Es gibt keine kostenpflichtigen Leistungen und keine Werbung.</p>
       <h2>Verantwortlich für den Inhalt</h2>
       <p>Ahmed Kilic, Anschrift wie oben.</p>
       <h2>Haftung für Inhalte</h2>
       <p>
-        Kaufklar erstellt automatisierte, unverbindliche Einschätzungen auf Grundlage der eingegebenen Inseratsdaten, offener Datenquellen und künstlicher Intelligenz.
+        Tachoklar erstellt automatisierte, unverbindliche Einschätzungen auf Grundlage der eingegebenen Inseratsdaten, offener Datenquellen und künstlicher Intelligenz.
         Sie ersetzen keine Begutachtung durch eine Fachwerkstatt oder Prüforganisation. Kostenangaben sind Richtwerte. Für Kaufentscheidungen, die auf Grundlage dieser
         Einschätzungen getroffen werden, wird keine Haftung übernommen, soweit gesetzlich zulässig.
       </p>

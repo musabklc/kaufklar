@@ -1,6 +1,6 @@
 import { ReportForm } from "@/components/community/report-form";
 
-export const metadata = { title: "Problem melden – Kaufklar" };
+export const metadata = { title: "Problem melden – Tachoklar" };
 
 export default function MeldenPage() {
   return (

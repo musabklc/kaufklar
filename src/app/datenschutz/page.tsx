@@ -1,4 +1,4 @@
-export const metadata = { title: "Datenschutz – Kaufklar" };
+export const metadata = { title: "Datenschutz – Tachoklar" };
 
 const A = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a className="text-brand underline underline-offset-4" href={href} target="_blank" rel="noopener noreferrer">{children}</a>
@@ -8,14 +8,14 @@ export default function Datenschutz() {
   return (
     <article className="mx-auto max-w-2xl space-y-4 px-4 py-12 leading-relaxed sm:px-6 [&_h2]:mt-10 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mt-6 [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
       <h1 className="text-3xl font-bold">Datenschutzerklärung</h1>
-      <p>Stand: November 2026. Diese Erklärung informiert dich darüber, welche personenbezogenen Daten bei der Nutzung von Kaufklar verarbeitet werden, wozu und auf welcher Rechtsgrundlage.</p>
+      <p>Stand: November 2026. Diese Erklärung informiert dich darüber, welche personenbezogenen Daten bei der Nutzung von Tachoklar verarbeitet werden, wozu und auf welcher Rechtsgrundlage.</p>
 
       <h2>1. Verantwortlicher</h2>
       <p>
         Ahmed Kilic, Rubihornstr. 24, 86163 Augsburg, Deutschland<br />
         E-Mail: <a className="text-brand underline underline-offset-4" href="mailto:musabkilic38@gmail.com">musabkilic38@gmail.com</a>
       </p>
-      <p>Kaufklar ist ein privates, nicht-kommerzielles und kostenloses Angebot. Es gibt kein Benutzerkonto, keine Werbung, keine Analyse- oder Tracking-Werkzeuge und keine Cookies.</p>
+      <p>Tachoklar ist ein privates, nicht-kommerzielles und kostenloses Angebot. Es gibt kein Benutzerkonto, keine Werbung, keine Analyse- oder Tracking-Werkzeuge und keine Cookies.</p>
 
       <h2>2. Hosting und Server-Protokolle</h2>
       <p>
@@ -66,7 +66,7 @@ export default function Datenschutz() {
         erforderlich für den von dir gewünschten Dienst).
       </p>
 
-      <h2>5. Kaufklar-Preisindex</h2>
+      <h2>5. Tachoklar-Preisindex</h2>
       <p>
         Aus ausgelesenen Inseraten speichern wir in unserer Datenbank: Marke, Modell, Variante, Kraftstoff, Baujahr, Kilometerstand, Leistung, Preis und ggf. den öffentlichen Link
         des Inserats. Daraus berechnen wir Marktwerte für andere Nutzer (Art. 6 Abs. 1 lit. f DSGVO). Angaben zum Verkäufer (Name, Telefonnummer, Standort) und Angaben über dich

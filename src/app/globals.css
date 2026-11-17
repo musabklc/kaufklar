@@ -58,7 +58,7 @@
 }
 
 :root {
-  /* Kaufklar – hell & klar: kühles Off-White, weiße Flächen, Tinte, Kobaltblau als einzige Akzentfarbe. Risikofarben nur für Bewertungen. */
+  /* Tachoklar – hell & klar: kühles Off-White, weiße Flächen, Tinte, Kobaltblau als einzige Akzentfarbe. Risikofarben nur für Bewertungen. */
   --background: #eef0f3;
   --foreground: #0b0c0e;
   --card: #ffffff;

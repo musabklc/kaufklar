@@ -1,6 +1,6 @@
-# Kaufklar – KI-Kaufberater für Gebrauchtwagen
+# Tachoklar – KI-Kaufberater für Gebrauchtwagen
 
-Inserat-Link oder Screenshots einfügen → Kaufklar zeigt motorspezifische Schwachstellen mit Reparatur-Richtwerten, prüft das Inserat auf Auffälligkeiten, bewertet den Preis (nur mit echten Vergleichsdaten), erstellt eine Besichtigungs-Checkliste, Verkäuferfragen, einen Probefahrt-Leitfaden und eine Verhandlungsstrategie mit fertiger Nachricht.
+Inserat-Link oder Screenshots einfügen → Tachoklar zeigt motorspezifische Schwachstellen mit Reparatur-Richtwerten, prüft das Inserat auf Auffälligkeiten, bewertet den Preis (nur mit echten Vergleichsdaten), erstellt eine Besichtigungs-Checkliste, Verkäuferfragen, einen Probefahrt-Leitfaden und eine Verhandlungsstrategie mit fertiger Nachricht.
 
 ## Schnellstart
 
@@ -34,14 +34,14 @@ npm test
 | `GEMINI_API_KEY` | Kostenlose KI (Auslesen von Screenshots/Links, Inserat-Prüfung, Alternativen). **Im Gratis-Tarif nutzt Google die Eingaben zur Produktverbesserung** – steht so in der Datenschutzseite. |
 | `GEMINI_MODEL` | Standard `gemini-3.8-flash`. |
 | `GEMINI_SEARCH_ENABLED` | `true` = die KI recherchiert Schwachstellen per Google-Suche. Nur im **bezahlten** Gemini-Tarif. Standard `false`. |
-| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Kaufklar-Preisindex. Ohne sie läuft alles, nur ohne automatische Marktpreise. Secret Key nur serverseitig. |
+| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Tachoklar-Preisindex. Ohne sie läuft alles, nur ohne automatische Marktpreise. Secret Key nur serverseitig. |
 | `LINK_IMPORT_ENABLED` | `true` aktiviert den Link-Import: AutoScout24 und Kleinanzeigen werden direkt gelesen (getestet 11/2026); mobile.de blockt automatische Abrufe bewusst, dort führt die App zum Screenshot-Weg (Sperren werden nicht umgangen). **Nutzungsbedingungen der Portale vor öffentlichem Betrieb rechtlich prüfen.** |
 
 Ohne jeden Schlüssel funktionieren manuelle Eingabe, Wissensdatenbank, Regelprüfung, Monatskosten, Checklisten, Vergleich und Verhandlung.
 
 ## Alleinstellungsmerkmale
 
-- **Kaufklar-Preisindex** (`src/lib/server/price-index.ts`): Jedes per Link/Screenshot ausgelesene Inserat wird anonym gespeichert (Marke, Modell, Baujahr, km, kW, Preis). Vergleichbare Angebote (Baujahr ±2, km ±40 %, letzte 18 Monate, Ausreißer gefiltert) ergeben automatisch den Marktwert – kein manuelles Suchen. Manuelle Eingaben fließen bewusst nicht ein. Dazu der **Marktcheck** (`searchKleinanzeigen` in `src/lib/server/link.ts`): bei jeder Analyse eine Kleinanzeigen-Autosuche (robots.txt erlaubt `/s-autos/`) mit Baujahr- und km-Filter; die passendsten 12 Treffer werden einzeln geöffnet, Preis und Privat/Händler direkt im Inserat abgelesen.
+- **Tachoklar-Preisindex** (`src/lib/server/price-index.ts`): Jedes per Link/Screenshot ausgelesene Inserat wird anonym gespeichert (Marke, Modell, Baujahr, km, kW, Preis). Vergleichbare Angebote (Baujahr ±2, km ±40 %, letzte 18 Monate, Ausreißer gefiltert) ergeben automatisch den Marktwert – kein manuelles Suchen. Manuelle Eingaben fließen bewusst nicht ein. Dazu der **Marktcheck** (`searchKleinanzeigen` in `src/lib/server/link.ts`): bei jeder Analyse eine Kleinanzeigen-Autosuche (robots.txt erlaubt `/s-autos/`) mit Baujahr- und km-Filter; die passendsten 12 Treffer werden einzeln geöffnet, Preis und Privat/Händler direkt im Inserat abgelesen.
 - **Echte Monatskosten** (`src/lib/analysis/costs.ts`): Kfz-Steuer exakt nach KraftStG (alle Regelungen seit 2009, progressiver CO₂-Tarif ab 2021, E-Auto-Befreiung), Sprit, Wartung, absehbare Reparaturen. Getestet mit Rechenbeispielen.
 - **Alternativen im gleichen Budget**: KI-Vorschläge „zuverlässiger / schöner / sparsamer / mehr Platz“ mit Preisindex-Daten und Suchlink.
 - **Inserate-Vergleich** (`/vergleich`, `src/lib/analysis/compare.ts`): transparente Rangfolge mit Begründung; Kosten werden nur über Posten verglichen, die für alle Autos bekannt sind.
@@ -56,7 +56,7 @@ Link oder Screenshot → KI liest alle Daten aus → Analyse startet sofort (das
 |---|---|---|---|
 | EEA CO₂-Monitoring Pkw | CO₂, Verbrauch, Hubraum, kW, Motorcode, Typgenehmigung für alle EU-Typen 2010–2025 | Tabelle `vehicle_types`, Import: `node scripts/import-eea.mjs 2010 2025` (jährlich um das neue Jahr ergänzen); Live-Abfrage bei der EEA nur als Reserve (`src/lib/server/eea.ts`) | CC BY 4.0, Quellenangabe in Analyse + Methodik |
 | EU Safety Gate | offizielle Pkw-Rückrufe seit 2010 (3.569 Fälle beim Erstimport) | Tabelle `recalls_eu`, Import: `node scripts/import-safety-gate.mjs 2010` (wöchentlich wiederholen, idempotent) | CC BY 4.0 |
-| Kaufklar-Community | von Nutzern gemeldete Probleme | Tabelle `problem_reports`, API `/api/reports`, Formular unter jeder Analyse und unter `/melden` | eigene Daten |
+| Tachoklar-Community | von Nutzern gemeldete Probleme | Tabelle `problem_reports`, API `/api/reports`, Formular unter jeder Analyse und unter `/melden` | eigene Daten |
 
 **Community-Filter:** Eingabeprüfung → Spamfalle → Limit pro Person (5/Tag, 5/Minute) → KI-Moderation (Spam, persönliche Daten, Plausibilität, einheitlicher Titel) → sichtbar erst ab 3 unabhängigen Meldern (`MIN_REPORTERS` in `src/lib/analysis/community.ts`). Meldungen, die mangels KI nicht moderiert werden konnten, bleiben `pending` und zählen nicht.
 
@@ -64,11 +64,11 @@ Neue Tabellen anlegen: Inhalte von `supabase/migrations/*.sql` im Supabase-SQL-E
 
 ## Betrieb
 
-Kaufklar ist ein kostenloses, nicht-kommerzielles Projekt. Alle Funktionen sind frei nutzbar.
+Tachoklar ist ein kostenloses, nicht-kommerzielles Projekt. Alle Funktionen sind frei nutzbar.
 
 ## Veröffentlichen (Webseite + installierbare App)
 
-Kaufklar ist eine **PWA**: Auf dem Handy über „Zum Startbildschirm hinzufügen“ (iPhone: Teilen-Menü in Safari; Android: Chrome-Menü bzw. Installations-Hinweis) wird es wie eine App mit eigenem Icon installiert. Dafür sorgen `src/app/manifest.ts` und die generierten Icons (`src/app/apple-icon.tsx`, `src/app/pwa-icon`).
+Tachoklar ist eine **PWA**: Auf dem Handy über „Zum Startbildschirm hinzufügen“ (iPhone: Teilen-Menü in Safari; Android: Chrome-Menü bzw. Installations-Hinweis) wird es wie eine App mit eigenem Icon installiert. Dafür sorgen `src/app/manifest.ts` und die generierten Icons (`src/app/apple-icon.tsx`, `src/app/pwa-icon`).
 
 **Schritte bei Vercel:**
 
@@ -107,7 +107,7 @@ src/
     ai/schema.ts             zod → Gemini-JSON-Schema, tolerante Validierung
     analysis/costs.ts        Kfz-Steuer + Monatskosten
     analysis/compare.ts      Inserate-Vergleich
-    server/price-index.ts    Kaufklar-Preisindex (Supabase)
+    server/price-index.ts    Tachoklar-Preisindex (Supabase)
     server/link.ts           Link-Import mit Host-Allowlist (SSRF-Schutz)
     server/http.ts           Upload-Prüfung (Magic Bytes, 5 MB, max. 8), Ratelimit
     storage.ts               localStorage (Analysen, Checklistenstand)

@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Macht Kaufklar auf dem Handy installierbar (Startbildschirm, ohne Browserleiste). */
+/** Macht Tachoklar auf dem Handy installierbar (Startbildschirm, ohne Browserleiste). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Kaufklar – KI-Kaufberater für Gebrauchtwagen",
-    short_name: "Kaufklar",
+    name: "Tachoklar – KI-Kaufberater für Gebrauchtwagen",
+    short_name: "Tachoklar",
     description: "Inserat einfügen, Risiken erkennen, fair verhandeln.",
     lang: "de",
     start_url: "/",

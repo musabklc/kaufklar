@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     status,
     message:
       status === "approved"
-        ? "Danke! Deine Meldung wurde geprüft und fließt in die Kaufklar-Datenbank ein. Sichtbar wird ein Problem, sobald mehrere Personen es unabhängig melden."
+        ? "Danke! Deine Meldung wurde geprüft und fließt in die Tachoklar-Datenbank ein. Sichtbar wird ein Problem, sobald mehrere Personen es unabhängig melden."
         : status === "rejected"
           ? "Danke – diese Meldung können wir leider nicht übernehmen. Bitte beschreibe nur technische Probleme am Fahrzeug, ohne persönliche Daten."
           : "Danke! Deine Meldung wird geprüft, bevor sie in die Datenbank einfließt.",

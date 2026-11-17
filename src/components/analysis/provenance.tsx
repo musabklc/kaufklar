@@ -3,7 +3,7 @@ import type { Provenance } from "@/lib/types";
 const P: Record<Provenance, { label: string; desc: string; cls: string }> = {
   gesichert: { label: "Gesichert", desc: "steht so im Inserat", cls: "bg-ok-soft text-foreground" },
   modelltypisch: { label: "Modelltypisch", desc: "bekannte Schwachstelle laut Datenbank", cls: "bg-paper text-foreground" },
-  nutzer: { label: "Von Nutzern gemeldet", desc: "von mehreren Kaufklar-Nutzern unabhängig gemeldet", cls: "bg-ok-soft text-foreground" },
+  nutzer: { label: "Von Nutzern gemeldet", desc: "von mehreren Tachoklar-Nutzern unabhängig gemeldet", cls: "bg-ok-soft text-foreground" },
   ki: { label: "KI-Einschätzung", desc: "Vermutung der KI, nicht verifiziert", cls: "bg-secondary text-foreground" },
   pruefen: { label: "Zu prüfen", desc: "muss vor Ort geklärt werden", cls: "bg-warn-soft text-foreground" },
 };

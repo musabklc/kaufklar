@@ -128,7 +128,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         <NegotiationSection r={r} />
         <Summary r={r} />
         <Section id="melden" title="Kennst du dieses Modell?">
-          <p className="mb-6 max-w-3xl">Hattest du selbst Probleme mit einem {name || "solchen Auto"}? Melde sie – so wird Kaufklar mit jedem Nutzer genauer.</p>
+          <p className="mb-6 max-w-3xl">Hattest du selbst Probleme mit einem {name || "solchen Auto"}? Melde sie – so wird Tachoklar mit jedem Nutzer genauer.</p>
           <ReportForm initial={{ make: v.make, model: v.model, engineCode: v.engineCode, year: parseYear(v.firstRegistration) }} />
         </Section>
         <div className="no-print flex justify-center">

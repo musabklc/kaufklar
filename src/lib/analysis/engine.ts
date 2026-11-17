@@ -142,14 +142,14 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
         id: `c-${n}`,
         title: c.title,
         component: c.component,
-        detail: `Von ${c.reporters} Kaufklar-Nutzern unabhängig gemeldet${c.medianCost ? `, mittlere Reparaturkosten ca. ${eur(c.medianCost)}` : ""}${c.typicalFromKm ? `, meist ab ca. ${c.typicalFromKm.toLocaleString("de-DE")} km` : ""}.`,
+        detail: `Von ${c.reporters} Tachoklar-Nutzern unabhängig gemeldet${c.medianCost ? `, mittlere Reparaturkosten ca. ${eur(c.medianCost)}` : ""}${c.typicalFromKm ? `, meist ab ca. ${c.typicalFromKm.toLocaleString("de-DE")} km` : ""}.`,
         risk: c.risk,
         costMin: c.costMin,
         costMax: c.costMax,
         relevantFromKm: c.typicalFromKm,
         detection: "Beim Verkäufer gezielt nachfragen und bei der Besichtigung prüfen (lassen).",
         provenance: "nutzer",
-        origin: `Kaufklar-Community (${c.reporters} Meldungen)`,
+        origin: `Tachoklar-Community (${c.reporters} Meldungen)`,
         relevantNow: relevant(c.typicalFromKm),
       }),
     );
@@ -217,7 +217,7 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   const price: Price = { asking, comps: validComps, marketEstimate: null, fairMin: null, fairMax: null, note: "" };
   const bySource = (s: Comp["source"]) => validComps.filter((c) => c.source === s).length;
   const sourceText = [
-    bySource("index") && `${bySource("index")} aus dem Kaufklar-Preisindex`,
+    bySource("index") && `${bySource("index")} aus dem Tachoklar-Preisindex`,
     bySource("web") && `${bySource("web")} per Google-Recherche gefunden, Preis im Inserat geprüft`,
     bySource("nutzer") && `${bySource("nutzer")} von dir eingetragen`,
   ].filter(Boolean).join(", ");
@@ -241,7 +241,7 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
     if (asking !== null && asking < quantile(comps, 0.25) * 0.85)
       f("Preis deutlich unter Vergleichsangeboten", "Ein auffällig niedriger Preis kann Gründe haben (Mängel, Eile) – oder auf Betrug hindeuten. Niemals Anzahlungen/Vorkasse ohne Besichtigung leisten.", "verdacht", "mittel", `${eur(asking)} vs. Median ${eur(r100(med))}`);
   } else {
-    price.note = `Nicht genug Vergleichsdaten${comps.length ? ` (bisher ${comps.length}: ${sourceText})` : ""}. Der Kaufklar-Preisindex wächst mit jeder Analyse; bis dahin kannst du selbst Vergleichspreise ergänzen (gleiches Modell, ähnliches Baujahr und km). Ohne mindestens 3 Vergleichswerte nennen wir bewusst keinen Marktwert.`;
+    price.note = `Nicht genug Vergleichsdaten${comps.length ? ` (bisher ${comps.length}: ${sourceText})` : ""}. Der Tachoklar-Preisindex wächst mit jeder Analyse; bis dahin kannst du selbst Vergleichspreise ergänzen (gleiches Modell, ähnliches Baujahr und km). Ohne mindestens 3 Vergleichswerte nennen wir bewusst keinen Marktwert.`;
   }
 
   if (ai)

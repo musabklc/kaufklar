@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Kaufklar – Gebrauchtwagen-Inserat prüfen, bevor du kaufst";
+export const alt = "Tachoklar – Gebrauchtwagen-Inserat prüfen, bevor du kaufst";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -15,7 +15,7 @@ export default function OpengraphImage() {
             <rect x="2.5" y="2.5" width="8" height="23" rx="1" fill="#0b3c9e" />
             <path d="m17 14.5 4.2 4.2L33 7.5" fill="none" stroke="#131417" strokeWidth="3.2" strokeLinecap="square" />
           </svg>
-          <div style={{ fontSize: 44, fontWeight: 700 }}>Kaufklar</div>
+          <div style={{ fontSize: 44, fontWeight: 700 }}>Tachoklar</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ fontSize: 96, fontWeight: 800, lineHeight: 1 }}>Erst prüfen. Dann kaufen.</div>

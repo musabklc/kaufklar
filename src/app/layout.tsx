@@ -11,7 +11,7 @@ const sans = Host_Grotesk({ variable: "--font-sans", subsets: ["latin", "latin-e
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Kaufklar – KI-Kaufberater für Gebrauchtwagen",
+  title: "Tachoklar – KI-Kaufberater für Gebrauchtwagen",
   description: "Inserat einfügen, Risiken erkennen, fair verhandeln. Unabhängige Analyse für Gebrauchtwagen in Deutschland.",
 };
 
@@ -23,9 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <header className="sticky top-0 z-40 bg-background">
           <div className="mx-auto flex h-16 max-w-[78rem] items-center justify-between px-4 sm:px-6">
-            <Link href="/" className="flex min-h-11 items-center gap-2.5 text-lg font-bold" aria-label="Kaufklar Startseite">
+            <Link href="/" className="flex min-h-11 items-center gap-2.5 text-lg font-bold" aria-label="Tachoklar Startseite">
               <Logo />
-              Kaufklar
+              Tachoklar
             </Link>
             <nav className="flex items-center gap-1 text-sm">
               <Link href="/vergleich" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground sm:inline-flex">Vergleich</Link>
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="flex-1">{children}</main>
         <footer className="mt-16 lg:mt-24 bg-foreground text-background">
           <div className="mx-auto max-w-[78rem] px-4 pb-10 pt-16 sm:px-6">
-            <p className="text-[clamp(3.5rem,14vw,10rem)] font-bold leading-[0.85] tracking-[-0.04em]">Kaufklar</p>
+            <p className="text-[clamp(3.5rem,14vw,10rem)] font-bold leading-[0.85] tracking-[-0.04em]">Tachoklar</p>
             <div className="mt-10 flex flex-col gap-6 text-sm text-background/70 sm:flex-row sm:items-end sm:justify-between">
               <p className="max-w-md">
                 Unabhängige Kaufberatung für Gebrauchtwagen in Deutschland. Ersetzt keine Begutachtung durch eine Werkstatt oder Prüforganisation; Kosten sind unverbindliche Richtwerte.

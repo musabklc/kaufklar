@@ -18,7 +18,7 @@ async function Intake() {
 const engines = KNOWLEDGE.filter((k) => k.kind === "motor");
 const gearboxes = KNOWLEDGE.filter((k) => k.kind === "getriebe");
 
-// Echte Vergleichsangebote aus der Kaufklar-Analyse eines CLS 500 (Kleinanzeigen, Preise im Inserat geprüft, Nov. 2026).
+// Echte Vergleichsangebote aus der Tachoklar-Analyse eines CLS 500 (Kleinanzeigen, Preise im Inserat geprüft, Nov. 2026).
 const CLS_COMPS = [
   { title: "CLS 500 C219, V8 388 PS", detail: "2008 · Privat", price: "12.000 €" },
   { title: "CLS 500 AMG-Paket, MB-Service", detail: "2009 · Privat", price: "10.999 €" },
@@ -53,7 +53,7 @@ export default function Home() {
           <div>
             <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">Der Preis, gemessen an echten Angeboten.</h2>
             <p className="mt-6 max-w-lg text-lg">
-              Bei jeder Analyse sucht Kaufklar live nach vergleichbaren Autos: gleiches Modell, ähnliches Baujahr, ähnlicher Kilometerstand. Jedes gefundene Inserat wird geöffnet und der Preis direkt dort abgelesen. Was sich nicht prüfen lässt, zählt nicht.
+              Bei jeder Analyse sucht Tachoklar live nach vergleichbaren Autos: gleiches Modell, ähnliches Baujahr, ähnlicher Kilometerstand. Jedes gefundene Inserat wird geöffnet und der Preis direkt dort abgelesen. Was sich nicht prüfen lässt, zählt nicht.
             </p>
             <p className="mt-4 max-w-lg text-lg">Am Ende steht ein klares Urteil: gut eingepreist, zu teuer oder auffällig günstig.</p>
           </div>
@@ -74,7 +74,7 @@ export default function Home() {
               <span className="text-muted-foreground">Marktschnitt</span>
               <span className="text-2xl font-semibold tabular">11.000 €</span>
             </p>
-            <figcaption className="sr-only">Echte Vergleichsangebote aus einer Kaufklar-Analyse</figcaption>
+            <figcaption className="sr-only">Echte Vergleichsangebote aus einer Tachoklar-Analyse</figcaption>
           </figure>
         </div>
       </section>
@@ -94,7 +94,7 @@ export default function Home() {
         <div>
           <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">Wir kennen den Motor, nicht nur die Marke.</h2>
           <p className="mt-6 max-w-md text-lg">
-            Ein BMW 320d von 2012 hat andere Probleme als einer von 2016. Kaufklar ordnet Motor und Getriebe zu und nennt Schwachstellen mit Reparaturkosten und woran du sie bei der Besichtigung erkennst. Für jedes andere Modell recherchiert die KI die bekannten Probleme.
+            Ein BMW 320d von 2012 hat andere Probleme als einer von 2016. Tachoklar ordnet Motor und Getriebe zu und nennt Schwachstellen mit Reparaturkosten und woran du sie bei der Besichtigung erkennst. Für jedes andere Modell recherchiert die KI die bekannten Probleme.
           </p>
           <div className="mt-8 grid gap-8 sm:grid-cols-2">
             <List title="Motoren in der Datenbank" items={engines.map((e) => e.name)} />
@@ -146,7 +146,7 @@ function List({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-/** Echtes Auto, echtes Ergebnis: die Kaufklar-Analyse eines CLS 500 (Nov. 2026) als schwebende Karte über dem Foto. */
+/** Echtes Auto, echtes Ergebnis: die Tachoklar-Analyse eines CLS 500 (Nov. 2026) als schwebende Karte über dem Foto. */
 function HeroCar() {
   return (
     <div className="animate-rise relative pb-28 [animation-delay:200ms] sm:pb-20">
@@ -175,7 +175,7 @@ function HeroCar() {
         <p className="mt-4 rounded-xl bg-background px-4 py-3 text-sm">
           <span className="font-semibold">Getriebe-Steuerplatte</span> · 600–1.500 € · bei der Probefahrt alle Gänge durchschalten
         </p>
-        <figcaption className="sr-only">Beispiel einer echten Kaufklar-Analyse</figcaption>
+        <figcaption className="sr-only">Beispiel einer echten Tachoklar-Analyse</figcaption>
       </figure>
     </div>
   );
