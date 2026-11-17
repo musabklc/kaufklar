@@ -49,7 +49,8 @@ export async function findComparables(v: Vehicle): Promise<Comp[]> {
     console.error("price index read failed", error.message);
     return [];
   }
-  const rows = (data as Row[]).filter((r) => r.source_url !== ownKey(v)); // eigenes Inserat nie als Vergleich
+  // Eigenes Inserat nie als Vergleich – auch nicht, wenn es früher per Link und jetzt per Screenshot kam (gleicher Preis + km).
+  const rows = (data as Row[]).filter((r) => r.source_url !== ownKey(v) && !(r.price_eur === v.priceEur && r.mileage_km === v.mileageKm));
   const keep = new Set(withoutOutliers(rows.map((r) => r.price_eur)));
   return rows
     .filter((r) => keep.has(r.price_eur))
