@@ -281,6 +281,8 @@ export type AnalysisResult = {
   recommendation: Recommendation;
   checklist: ChecklistSection[];
   questions: string[];
+  /** Kurze erste Nachricht an den Verkäufer (höchstens 3 Fragen); fehlt bei älteren Analysen. */
+  contactMessage?: string;
   testDrive: GuideSection[];
   negotiation: Negotiation;
   summary: { pros: string[]; cons: string[]; mustCheck: string[] };

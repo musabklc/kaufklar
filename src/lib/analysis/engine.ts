@@ -375,17 +375,20 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   let negotiation: Negotiation = null;
   if (asking !== null && asking > 0) {
     const args: string[] = [];
-    dueCosts.forEach((c) => args.push(`${c.title} – ${c.reason} (ca. ${eur(c.min)}–${eur(c.max)})`));
+    const short: string[] = []; // knappe Stichworte für die Nachricht – die ausführlichen Argumente sind fürs Gespräch
+    dueCosts.forEach((c) => { args.push(`${c.title} – ${c.reason} (ca. ${eur(c.min)}–${eur(c.max)})`); short.push(c.title); });
     let risk = 0;
     for (const w of relevantWps) {
       if (w.costMin === null || w.costMax === null || MAINT[w.id] || w.provenance === "ki" || w.provenance === "recherche") continue;
       const mid = (w.costMin + w.costMax) / 2;
       risk += w.risk === "hoch" ? 0.15 * mid : w.risk === "mittel" ? 0.05 * mid : 0;
-      if (w.risk === "hoch") args.push(`Bekanntes Risiko „${w.title}“ ohne Nachweis über Instandsetzung (Reparatur ca. ${eur(w.costMin)}–${eur(w.costMax)})`);
+      if (w.risk === "hoch") { args.push(`Bekanntes Risiko „${w.title}“ ohne Nachweis über Instandsetzung (Reparatur ca. ${eur(w.costMin)}–${eur(w.costMax)})`); short.push(w.title); }
     }
-    findings.filter((x) => x.status === "bestaetigt" && x.severity !== "niedrig").forEach((x) => args.push(x.title));
+    findings.filter((x) => x.status === "bestaetigt" && x.severity !== "niedrig").forEach((x) => { args.push(x.title); short.push(x.title); });
     const base = price.marketEstimate && price.marketEstimate < asking ? price.marketEstimate : asking;
-    if (price.marketEstimate && price.marketEstimate < asking) args.unshift(`Angebotspreis liegt über dem Median vergleichbarer Angebote (${eur(price.marketEstimate)})`);
+    if (price.marketEstimate && price.marketEstimate < asking) {
+      args.unshift(`Angebotspreis liegt über dem Median vergleichbarer Angebote (${eur(price.marketEstimate)})`);
+    }
     let target = clamp(r100(base - dueMid - risk), asking * 0.75, asking);
     if (target >= asking) {
       target = r100(asking * 0.97);
@@ -394,17 +397,19 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
     const entry = Math.max(r100(asking * 0.7), r100(target - (asking - target) * 0.5 - asking * 0.02));
     const ceiling = Math.max(target, price.fairMax ? Math.min(asking, price.fairMax) : r100(asking - dueMid * 0.5));
     const name = [v.make, v.model, v.variant].filter(Boolean).join(" ") || "Fahrzeug";
-    const top = args.slice(0, 4).map((a) => `– ${a}`).join("\n");
-    const message = `Guten Tag,
+    // Preisvorschlag per Nachricht: höchstens ~12 % unter Angebot – ein Tiefstgebot vorab wird von Verkäufern meist ignoriert
+    const offer = Math.max(entry, r100(asking * 0.88));
+    // Höchstens zwei Gründe, als ein ruhiger Satz statt einer Mängelliste
+    const because = [
+      price.marketEstimate && price.marketEstimate < asking ? `vergleichbare Angebote eher bei ${eur(price.marketEstimate)} liegen` : null,
+      short.length ? `ich noch mit Kosten für ${short.slice(0, 2).map(plain).join(" und ")} rechnen muss` : null,
+    ].filter(Boolean);
+    const message = `Hallo,
 
-vielen Dank für Ihr Inserat zum ${name}. Das Fahrzeug interessiert mich grundsätzlich sehr.
+danke für die Infos zum ${name}, ich habe ernsthaftes Interesse.
+${because.length ? `Da ${because.join(" und ")}, wäre ich bei ${eur(offer)}.` : `Wäre ${eur(offer)} für Sie machbar?`}
 
-Bei der Durchsicht sind mir einige Punkte aufgefallen, die ich beim Preis berücksichtigen muss:
-${top}
-
-Unter Berücksichtigung dieser Punkte könnte ich mir einen Kaufpreis von ${eur(entry)} vorstellen – vorbehaltlich Besichtigung und Probefahrt.
-
-Wäre das für Sie eine Gesprächsgrundlage? Ich freue mich auf Ihre Rückmeldung.
+Wenn wir da zusammenkommen, schaue ich ihn mir gern zeitnah an.
 
 Viele Grüße`;
     negotiation = { entry, target, ceiling, arguments: args, message };
@@ -486,6 +491,25 @@ Viele Grüße`;
   const seen = new Set<string>();
   const questions = q.filter((x) => !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
 
+  // Erste Nachricht: kurz, freundlich, höchstens 3 Fragen – die wichtigsten zuerst (fahrzeugspezifisch, dann Unterlagen).
+  // Der vollständige Fragenkatalog ist für die Besichtigung, nicht für die erste Nachricht.
+  const carName = [v.make, v.model, v.variant].filter(Boolean).join(" ") || "Wagen";
+  // Zwei Fragen: die wichtigste zum Fahrzeug und die nach Serviceheft/Rechnungen (falls offen) – mehr schreckt Verkäufer ab
+  const docs = questions.find((x) => x.startsWith("Liegt ein vollständiges Serviceheft"));
+  // Bitten um Fotos/Unterlagen oder Werkstatt-Termine gehören in ein späteres Gespräch, nicht in die erste Nachricht
+  const light = questions.filter((x) => !/Fahrzeugschein|Werkstatt meiner Wahl|warum verkaufen/i.test(x));
+  const pick = [...new Set([light[0], docs ?? light[1]].filter((x): x is string => Boolean(x)))];
+  const contactMessage = `Hallo,
+
+ist der ${carName} noch zu haben? Er gefällt mir gut.
+
+${pick.length === 1 ? "Vorab nur eine kurze Frage:" : "Vorab nur kurz:"}
+${pick.map((x) => `– ${x}`).join("\n")}
+
+Wenn das passt, würde ich ihn mir gern ansehen und kurz Probe fahren. Wann ginge es bei Ihnen?
+
+Viele Grüße`;
+
   // ---------- Probefahrt ----------
   const td = (title: string, base: string[], specific: string[]): GuideSection => ({
     title,
@@ -551,6 +575,7 @@ Viele Grüße`;
     recommendation: { verdict, reasons: dedupe(reasons) },
     checklist,
     questions,
+    contactMessage,
     identification,
     dataQuality,
     testDrive,
@@ -568,6 +593,9 @@ Viele Grüße`;
 }
 
 export { parseYear };
+
+/** Titel für Fließtext: ohne Klammerzusätze, Anführungszeichen und Nachsätze („Getriebeölwechsel trotz …“ → „Getriebeölwechsel“). */
+const plain = (t: string) => t.replace(/\s*\([^)]*\)/g, "").replace(/['"„“]/g, "").split(/\s+(?:trotz|–|-)\s+/)[0].trim();
 
 /** Motor und Getriebe zuordnen – mit ehrlicher Angabe, wie sicher das ist. */
 export function identify(v: Vehicle, kb: KbEntry[], dataNotes: string[] = []): Identification[] {

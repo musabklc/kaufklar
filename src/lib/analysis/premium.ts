@@ -20,6 +20,7 @@ export function freeView(r: AnalysisResult): AnalysisResult {
     recommendation: { ...r.recommendation, reasons: r.recommendation.reasons.filter((x) => !/€|\d+\/100/.test(x)) },
     checklist: [],
     questions: [],
+    contactMessage: undefined,
     testDrive: [],
     negotiation: null,
     summary: { pros: [], cons: [], mustCheck: [] },

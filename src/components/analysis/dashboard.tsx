@@ -142,8 +142,18 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         <>
         <AlternativesSection r={r} />
         <Checklist r={r} />
-        <Section id="fragen" eyebrow="Vor dem Termin" title="Fragen an den Verkäufer" action={<CopyButton label="Fragen kopieren" text={r.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")} />}>
-          <ol className="divide-y">
+        <Section id="fragen" eyebrow="Vor dem Termin" title="Fragen an den Verkäufer">
+          {r.contactMessage && (
+            <div className="mb-8">
+              <MessageEditor key={r.contactMessage} initial={r.contactMessage} title="Erste Nachricht (kurz, mit den wichtigsten Fragen)" />
+              <p className="mt-2 text-xs text-muted-foreground">Kurz und freundlich kommt bei Verkäufern besser an als ein langer Fragenkatalog. Den Rest klärst du bei der Besichtigung.</p>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-medium">Alle Fragen für die Besichtigung</h3>
+            <CopyButton label="Fragen kopieren" text={r.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")} />
+          </div>
+          <ol className="mt-2 divide-y">
             {r.questions.map((q, i) => (
               <li key={q} className="flex gap-3 py-3 text-sm">
                 <span className="w-5 shrink-0 text-right font-medium text-muted-foreground tabular">{i + 1}.</span>
@@ -653,21 +663,21 @@ function NegotiationSection({ r }: { r: AnalysisResult }) {
       <ul className="mt-2 space-y-2">
         {n.arguments.map((a) => <li key={a} className="flex gap-2.5 text-sm"><span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />{a}</li>)}
       </ul>
-      <MessageEditor key={n.message} initial={n.message} />
-      <p className="mt-3 text-xs text-muted-foreground">Preise sind Orientierungswerte aus den erkannten Kosten{r.price.marketEstimate ? " und deinen Vergleichspreisen" : ""}. Bleib freundlich und sachlich – Argumente wirken besser als Druck.</p>
+      <MessageEditor key={n.message} initial={n.message} title="Preisvorschlag per Nachricht" rows={9} />
+      <p className="mt-3 text-xs text-muted-foreground">Preise sind Orientierungswerte aus den erkannten Kosten{r.price.marketEstimate ? " und deinen Vergleichspreisen" : ""}. Tipp: Erst die kurze Nachricht unter „Fragen“ schicken und den Preis am besten vor Ort besprechen – die Argumente hier sind fürs Gespräch, nicht alle für die Nachricht.</p>
     </Section>
   );
 }
 
-function MessageEditor({ initial }: { initial: string }) {
+function MessageEditor({ initial, title = "Nachricht an den Verkäufer", rows = 10 }: { initial: string; title?: string; rows?: number }) {
   const [msg, setMsg] = useState(initial);
   return (
     <>
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="font-medium">Nachricht an den Verkäufer</h3>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 first:mt-0">
+        <h3 className="font-medium">{title}</h3>
         <CopyButton label="Nachricht kopieren" text={msg} />
       </div>
-      <Textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={14} className="mt-3 text-base leading-relaxed sm:text-sm" aria-label="Nachricht an den Verkäufer" />
+      <Textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={rows} className="mt-3 text-base leading-relaxed sm:text-sm" aria-label={title} />
     </>
   );
 }

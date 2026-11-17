@@ -119,3 +119,19 @@ test("Geringe Datenbasis: keine positive Empfehlung", () => {
   // vollständige Angaben + KB-Treffer + Marktwert, nur KI fehlt → mittel
   assert.equal(run({}, [9000, 10000, 11000]).dataQuality!.level, "mittel");
 });
+
+test("Nachrichten an den Verkäufer: kurz, nie leer, höchstens 3 Fragen, kein Tiefstgebot", () => {
+  const r = run({}, [9000, 9500, 10000]);
+  const c = r.contactMessage!;
+  assert.ok(c.includes("noch zu haben") && c.includes("Probe fahren"));
+  assert.ok(c.split("\n").filter((l) => l.startsWith("– ")).length <= 3);
+  assert.ok(c.length < 700, `zu lang: ${c.length}`);
+  const m = r.negotiation!.message;
+  assert.ok(!/:\n\n/.test(m), "leere Aufzählung");
+  const offer = Number(m.match(/bei ([\d.]+) €/)![1].replace(/\./g, ""));
+  assert.ok(offer >= 9900 * 0.88, `Angebot ${offer} zu niedrig`);
+  // ohne Preis: keine Preisnachricht, aber trotzdem eine erste Nachricht
+  const noPrice = run({ priceEur: null });
+  assert.equal(noPrice.negotiation, null);
+  assert.ok(noPrice.contactMessage!.length > 50);
+});
