@@ -68,7 +68,11 @@ export async function POST(req: Request) {
     provider?.searchPrices && webSearchEnabled()
       ? provider
           .searchPrices(vehicle)
-          .then((found) => verifyListings(found, vehicle.model))
+          .then(async (found) => {
+            const ok = await verifyListings(found, vehicle.model);
+            console.info(`marktcheck: ${found.length} gefunden, ${ok.length} im Inserat geprüft`, found.map((f) => f.url || "(kein Portal-Link)"));
+            return ok;
+          })
           .catch((e) => (console.error("price search failed", e), []))
       : Promise.resolve([]);
 
