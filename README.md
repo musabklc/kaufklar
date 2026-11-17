@@ -33,7 +33,7 @@ npm test
 |---|---|
 | `GEMINI_API_KEY` | Kostenlose KI (Auslesen von Screenshots/Links, Inserat-Prüfung, Alternativen). **Im Gratis-Tarif nutzt Google die Eingaben zur Produktverbesserung** – steht so in der Datenschutzseite. |
 | `GEMINI_MODEL` | Standard `gemini-3.8-flash`. |
-| `GEMINI_SEARCH_ENABLED` | `true` = die KI recherchiert Schwachstellen per Google-Suche. Nur im **bezahlten** Gemini-Tarif. Standard `false`. |
+| `GEMINI_SEARCH_ENABLED` | `true` = Recherche-Datenbank: Jeder neue Fahrzeugtyp wird **einmal** per KI + Google-Suche recherchiert (mit Quellen) und für alle weiteren Analysen gespeichert (`model_research`, Erneuerung nach 12 Monaten). Die Inseratsprüfung selbst sucht nie. Nur im **bezahlten** Gemini-Tarif. Standard `false`. |
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Tachoklar-Preisindex. Ohne sie läuft alles, nur ohne automatische Marktpreise. Secret Key nur serverseitig. |
 | `LINK_IMPORT_ENABLED` | `true` aktiviert den Link-Import: AutoScout24 und Kleinanzeigen werden direkt gelesen (getestet 11/2026); mobile.de blockt automatische Abrufe bewusst, dort führt die App zum Screenshot-Weg (Sperren werden nicht umgangen). **Nutzungsbedingungen der Portale vor öffentlichem Betrieb rechtlich prüfen.** |
 

@@ -1,4 +1,4 @@
-import type { AiAudit, Extraction, Finder, FinderInput, ForumInsights, Inspection, Moderation, ReportInput, ServiceBook, Vehicle } from "../types";
+import type { AiAudit, Extraction, Finder, FinderInput, ForumInsights, Inspection, Moderation, ReportInput, Research, ServiceBook, Source, Vehicle } from "../types";
 
 export type ForumPostInput = { board: string; threadTitle: string; authorCar: string | null; body: string };
 
@@ -20,7 +20,8 @@ export interface AiProvider {
   inspect(input: { vehicle: Vehicle; images: ImageInput[]; labels: string[] }): Promise<Inspection>;
   /** Scheckheft-Fotos ablesen. */
   serviceBook(input: { vehicle: Vehicle; images: ImageInput[] }): Promise<ServiceBook>;
-  /** Optional: Vergleichsangebote per Websuche (kostenpflichtige Tarife). */
+  /** Einmalige Typ-Recherche per Google-Suche, mit Quellen-Links. */
+  research(vehicle: Vehicle, label: string): Promise<{ research: Research; sources: Source[] }>;
 }
 
 export class AiError extends Error {}

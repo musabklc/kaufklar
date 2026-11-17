@@ -26,5 +26,6 @@ export function freeView(r: AnalysisResult): AnalysisResult {
     alternatives: [],
     ai: null,
     community: [],
+    research: null,
   };
 }

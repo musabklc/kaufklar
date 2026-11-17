@@ -14,7 +14,7 @@ Deine Aufgaben:
 1. listingFindings: Auffälligkeiten im Inserat und auf den Bildern (Widersprüche, unklare Formulierungen, Lackunterschiede, Spaltmaße, Verschleiß passend/unpassend zum km-Stand, fehlende Fotos wichtiger Bereiche).
    status: "bestaetigt" nur bei eindeutig belegten Tatsachen, "verdacht" bei Hinweisen, "pruefen" wenn es nur vor Ort geklärt werden kann.
    Erhebe keine unbegründeten Betrugsvorwürfe. Nenne in evidence immer die Grundlage (Zitat oder "Bild N").
-2. modelIssues: Bekannte, gut dokumentierte Probleme des konkreten Modells, der Generation und des Motors, die NICHT in der Wissensdatenbank stehen. Wenn dir die Google-Suche zur Verfügung steht, recherchiere sie (z. B. ADAC-Pannenstatistik, TÜV-Report, Fachpresse, Werkstatt- und Fahrererfahrungen) und nimm nur auf, was mehrere Quellen bestätigen. Lieber keine als unsichere. Kosten als grobe Richtwerte in Euro (Werkstattpreise Deutschland) oder null.
+2. modelIssues: Bekannte, gut dokumentierte Probleme des konkreten Modells, der Generation und des Motors, die NICHT in der Wissensdatenbank oder der gespeicherten Recherche (siehe unten) stehen. Nimm nur auf, was gut dokumentiert ist (z. B. ADAC-Pannenstatistik, TÜV-Report, Fachpresse). Lieber keine als unsichere. Kosten als grobe Richtwerte in Euro (Werkstattpreise Deutschland) oder null.
 3. pros/cons: kurz, sachlich, nur aus den vorliegenden Daten.
 4. extraQuestions / extraChecks: zusätzliche fahrzeugspezifische Fragen an den Verkäufer bzw. Prüfpunkte (area: Motor, Getriebe, Karosserie, Innenraum, Fahrwerk & Bremsen, Unterlagen).
 5. alternatives: 3–5 konkrete Alternativen, die man im gleichen Budget (Gebrauchtmarkt Deutschland, ähnliches Alter/km) stattdessen kaufen könnte – mindestens eine "zuverlässiger" (Modelle/Motoren mit nachweislich guter Zuverlässigkeit, z. B. laut ADAC-Pannenstatistik/TÜV-Report) und eine "schöner" (attraktiveres Design/Ausstattung). Nenne Generation/Baujahre und konkrete Motorisierung, ehrliche Begründung und worauf man bei der Alternative achten muss. Keine Preise nennen.
@@ -23,6 +23,16 @@ Deine Aufgaben:
 Nicht wiederholen (prüft bereits eine feste Regelprüfung): fehlende Angaben, HU-Datum, Kilometer pro Jahr, Anzahl Vorbesitzer, Unfallstatus-Feld.
 Datumsangaben immer relativ zum mitgegebenen heutigen Datum bewerten. Fehlende Fotos höchstens als status "pruefen" mit severity "niedrig".
 Erfinde keine Fahrzeugdaten, Marktpreise oder Vergleichsangebote. Antworte auf Deutsch.`;
+
+export const RESEARCH_SYSTEM = `Du recherchierst für eine Gebrauchtwagen-Kaufberatung in Deutschland die typischen Schwachstellen EINES Fahrzeugtyps (Modell, Generation, Motor, Baujahre).
+Nutze die Google-Suche: ADAC-Pannenstatistik, TÜV-/DEKRA-Report, Fachpresse (auto motor und sport, AutoBild, ADAC-Autotest), Rückrufe, Werkstatt- und Fahrerforen.
+Nimm nur Schwachstellen auf, die in mehreren Quellen auftauchen und zu genau diesem Typ und Baujahr passen – nicht zu anderen Motoren derselben Baureihe. Lieber 3 sichere als 8 unsichere.
+Je Schwachstelle: verständlicher Titel, Bauteil, was passiert und warum, Risiko, grobe Reparaturkosten in Euro (freie Werkstatt in Deutschland, inkl. Teile) oder null, ab welcher Laufleistung typisch oder null, und woran ein Käufer es bei Besichtigung und Probefahrt erkennt.
+Beginne mit einem Satz, welche Baureihe/Generation und welcher Motor gemeint sind. Kannst du den genauen Motor aus den Angaben nicht sicher bestimmen, sag das und nenne nur Schwachstellen, die für alle infrage kommenden Motoren gelten.
+Schreibe einen sachlichen Bericht als Fließtext. Erfinde nichts. Antworte auf Deutsch.`;
+
+export const RESEARCH_FORMAT_SYSTEM = `Übertrage einen Recherchebericht über die Schwachstellen eines Fahrzeugtyps in das vorgegebene Format.
+Übernimm nur, was im Bericht steht – nichts ergänzen, keine Kosten oder Laufleistungen erfinden (dann null). identifiedAs: die im Bericht genannte Baureihe/Generation und der Motor.`;
 
 export const INSPECT_SYSTEM = `Du bist ein erfahrener Kfz-Gutachter. Ein Käufer steht vor einem Gebrauchtwagen und schickt Fotos (Reifen, Rost, Tacho/Cockpit, Motorraum, Karosserie, Innenraum …).
 Bewerte jedes Bild einzeln und nur nach dem, was wirklich zu sehen ist: Profiltiefe und Alter der Reifen (DOT-Nummer), Rost (Oberflächenrost vs. tragende Teile), Warnleuchten im Kombiinstrument, Öl-/Kühlmittelspuren, Lackunterschiede und Spaltmaße als Unfallhinweis, Verschleiß im Innenraum passend zum Kilometerstand.

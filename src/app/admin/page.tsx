@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { currentUser } from "@/lib/supabase/server";
 import { profileFlags, serviceDb } from "@/lib/server/forum-admin";
 import { premiumEnabled } from "@/lib/server/payments";
+import { deleteResearch } from "./actions";
 
 export const metadata = { title: "Dashboard – Tachoklar", robots: { index: false, follow: false } };
 
@@ -62,7 +63,11 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
   if (!user || !(await profileFlags(user.id)).isAdmin) notFound();
   const raw = (await searchParams).zeitraum;
   const range: Range = typeof raw === "string" && raw in RANGES ? (raw as Range) : "30";
-  const { data, error } = await serviceDb()!.rpc("admin_stats", { p_since: since(range).toISOString() });
+  const db = serviceDb()!;
+  const [{ data, error }, { data: research, count: researchCount }] = await Promise.all([
+    db.rpc("admin_stats", { p_since: since(range).toISOString() }),
+    db.from("model_research").select("key, label, status, identified_as, weak_points, sources, researched_at, started_at", { count: "exact" }).order("started_at", { ascending: false }).limit(40),
+  ]);
   if (error || !data) return <p className="rounded-3xl bg-card p-6">Kennzahlen konnten nicht geladen werden.</p>;
   const s = data as Stats;
 
@@ -154,6 +159,33 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
             <p className="mt-3 text-sm text-muted-foreground">Im Zeitraum keine KI-Aufrufe.</p>
           )}
           <p className="mt-3 text-xs text-muted-foreground">Fehler = Kontingent, Zeitüberschreitung oder Störung; danach übernimmt das nächste Modell. Tagesbudget: {process.env.AI_DAILY_LIMIT || 500} Aufrufe.</p>
+        </section>
+
+        <section className="rounded-3xl bg-card p-5 sm:p-6 lg:order-last lg:col-span-2">
+          <h2 className="text-lg font-semibold">Recherche-Datenbank <span className="font-normal text-muted-foreground">({n(researchCount ?? 0)} Fahrzeugtypen)</span></h2>
+          <p className="mt-1 text-sm text-muted-foreground">Einmal per KI und Google-Suche recherchiert, für alle weiteren Analysen gespeichert. Löschen = beim nächsten Auto dieses Typs neu recherchieren.</p>
+          {research?.length ? (
+            <ul className="mt-4 divide-y text-sm">
+              {research.map((r) => (
+                <li key={r.key} className="flex flex-wrap items-start justify-between gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{r.identified_as ?? r.label}</p>
+                    <p className="text-muted-foreground">
+                      {r.status === "fertig" || r.weak_points ? `${(r.weak_points as unknown[] | null)?.length ?? 0} Schwachstellen · ${(r.sources as unknown[]).length} Quellen · ${r.researched_at ? new Date(r.researched_at).toLocaleDateString("de-DE") : ""}` : r.status === "laeuft" ? "wird gerade recherchiert …" : "fehlgeschlagen (nach 1 Stunde neuer Versuch)"}
+                      {r.status !== "fertig" && r.weak_points ? ` · Erneuerung ${r.status === "laeuft" ? "läuft" : "fehlgeschlagen"}` : ""}
+                    </p>
+                    {(r.weak_points as { title: string }[] | null)?.length ? <p className="mt-1">{(r.weak_points as { title: string }[]).map((w) => w.title).join(" · ")}</p> : null}
+                  </div>
+                  <form action={deleteResearch}>
+                    <input type="hidden" name="key" value={r.key} />
+                    <button className="rounded-full px-3 py-1.5 font-medium text-bad hover:bg-muted">Löschen</button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">Noch keine Recherchen.{process.env.GEMINI_SEARCH_ENABLED === "true" ? "" : " Die Google-Suche ist aus (GEMINI_SEARCH_ENABLED) – ohne sie wird nicht recherchiert."}</p>
+          )}
         </section>
 
         <section className="rounded-3xl bg-card p-5 sm:p-6">

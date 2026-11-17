@@ -14,6 +14,7 @@ import type {
   Negotiation,
   Price,
   Recommendation,
+  ResearchEntry,
   Scores,
   Vehicle,
   WeakPoint,
@@ -68,6 +69,7 @@ export type BuildInput = {
   dataNotes?: string[];
   recalls?: AnalysisResult["recalls"];
   community?: AnalysisResult["community"];
+  research?: ResearchEntry | null;
   now?: Date;
 };
 
@@ -84,7 +86,7 @@ export function huPlausible(hu: Date, now: Date, ageYears: number | null): boole
   return months <= allowed + 1;
 }
 
-export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alternatives = [], dataNotes = [], recalls = [], community = [], now = new Date() }: BuildInput): AnalysisResult {
+export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alternatives = [], dataNotes = [], recalls = [], community = [], research = null, now = new Date() }: BuildInput): AnalysisResult {
   const km = v.mileageKm;
   const reg = parseMonthYear(v.firstRegistration);
   const age = reg ? Math.max(0, (now.getTime() - reg.getTime()) / (365.25 * 864e5)) : null;
@@ -126,6 +128,31 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
     wear("w-rost", "Rost, Bremsleitungen, Gummilager", "Karosserie", "Ab etwa 10 Jahren steigt das Risiko für Korrosion und alternde Gummiteile.", "mittel", 200, 1500, "Unterboden, Schweller, Radläufe und Bremsleitungen ansehen.");
   if (isEv)
     wear("w-hv", "Zustand der Hochvoltbatterie (SoH)", "Elektrik", "Die Batteriegesundheit bestimmt Reichweite und Wert maßgeblich.", "mittel", null, null, "Batteriezertifikat / SoH-Auslesung verlangen.");
+
+  // Gespeicherte Typ-Recherche (KI + Google-Suche, mit Quellen) – nur, was die Datenbank noch nicht abdeckt
+  if (research) {
+    const known = weakPoints.map((w) => w.title.toLowerCase().split(/[\s/(]/)[0]).filter((k) => k.length > 3);
+    const stand = new Date(research.researchedAt).toLocaleDateString("de-DE", { month: "2-digit", year: "numeric" });
+    research.weakPoints
+      .filter((i) => !known.some((k) => i.title.toLowerCase().includes(k)))
+      .forEach((i, n) =>
+        weakPoints.push({
+          id: `r-${n}`,
+          title: i.title,
+          component: i.component,
+          detail: i.detail,
+          risk: i.risk,
+          costMin: i.costMinEur,
+          costMax: i.costMaxEur,
+          relevantFromKm: i.relevantFromKm,
+          detection: i.howToDetect,
+          provenance: "recherche",
+          origin: `Recherche zu ${research.label || research.identifiedAs} (Stand ${stand})`,
+          relevantNow: relevant(i.relevantFromKm),
+          sources: research.sources,
+        }),
+      );
+  }
 
   if (ai) {
     const kbKeys = weakPoints.map((w) => w.title.toLowerCase().split(/[\s/(]/)[0]).filter((k) => k.length > 3);
@@ -272,7 +299,7 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   const transparency = clamp(Math.round((10 * (keyFields.length - missing.length)) / keyFields.length - Math.min(3, suspicious)), 1, 10);
 
   const relevantWps = weakPoints.filter((w) => w.relevantNow);
-  let tr = relevantWps.reduce((s, w) => s + W[w.risk] * (w.provenance === "ki" ? 0.5 : 1), 0);
+  let tr = relevantWps.reduce((s, w) => s + W[w.risk] * (w.provenance === "ki" || w.provenance === "recherche" ? 0.5 : 1), 0);
   if (km !== null && km > 200000) tr += 1;
   if (age !== null && age > 12) tr += 1;
   if (!kb.length) tr += 1; // keine modellspezifischen Daten = mehr Unsicherheit
@@ -313,7 +340,7 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   // ---------- Empfehlung ----------
   const reasons: string[] = [];
   const severe = findings.filter((x) => x.severity === "hoch" && x.status !== "pruefen");
-  const highOpen = relevantWps.filter((w) => w.risk === "hoch" && w.provenance !== "ki");
+  const highOpen = relevantWps.filter((w) => w.risk === "hoch" && w.provenance !== "ki" && w.provenance !== "recherche");
   let verdict: Recommendation["verdict"];
   if (overallRisk >= 70 || severe.some((x) => /export|technische auffälligkeiten|unfallschaden angegeben/i.test(x.title))) {
     verdict = "Lieber Abstand nehmen";
@@ -351,7 +378,7 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
     dueCosts.forEach((c) => args.push(`${c.title} – ${c.reason} (ca. ${eur(c.min)}–${eur(c.max)})`));
     let risk = 0;
     for (const w of relevantWps) {
-      if (w.costMin === null || w.costMax === null || MAINT[w.id] || w.provenance === "ki") continue;
+      if (w.costMin === null || w.costMax === null || MAINT[w.id] || w.provenance === "ki" || w.provenance === "recherche") continue;
       const mid = (w.costMin + w.costMax) / 2;
       risk += w.risk === "hoch" ? 0.15 * mid : w.risk === "mittel" ? 0.05 * mid : 0;
       if (w.risk === "hoch") args.push(`Bekanntes Risiko „${w.title}“ ohne Nachweis über Instandsetzung (Reparatur ca. ${eur(w.costMin)}–${eur(w.costMax)})`);
@@ -533,6 +560,7 @@ Viele Grüße`;
     dataNotes,
     recalls,
     community,
+    research,
     aiUsed: ai !== null,
     aiNote,
     ai,

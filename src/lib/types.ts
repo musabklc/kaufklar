@@ -182,10 +182,20 @@ export const AiAuditSchema = z.object({
 });
 export type AiAudit = z.infer<typeof AiAuditSchema>;
 
+/** Einmalige Recherche je Fahrzeugtyp (KI mit Google-Suche), gespeichert für alle weiteren Analysen. */
+export const ResearchSchema = z.object({
+  identifiedAs: z.string().describe("Welche Baureihe/Generation und welcher Motor gemeint sind, z. B. 'BMW 3er F30/F31 (2012–2019), 2,0-l-Diesel N47/B47'"),
+  weakPoints: z
+    .array(AiAuditSchema.shape.modelIssues.element)
+    .describe("3–8 typische, in den Quellen belegte Schwachstellen dieses Typs; lieber weniger als unsichere"),
+});
+export type Research = z.infer<typeof ResearchSchema>;
+export type ResearchEntry = { label: string; identifiedAs: string; weakPoints: Research["weakPoints"]; sources: Source[]; researchedAt: string };
+
 export type Source = { label: string; url?: string };
 
 /** Herkunft einer Aussage – die UI zeigt sie immer an. */
-export type Provenance = "gesichert" | "modelltypisch" | "nutzer" | "ki" | "pruefen";
+export type Provenance = "gesichert" | "modelltypisch" | "nutzer" | "recherche" | "ki" | "pruefen";
 
 export type WeakPoint = {
   id: string;
@@ -200,6 +210,8 @@ export type WeakPoint = {
   provenance: Provenance;
   origin: string; // z. B. "BMW N47" oder "KI-Einschätzung"
   relevantNow: boolean;
+  /** Belege (nur bei recherchierten Schwachstellen). */
+  sources?: Source[];
 };
 
 export type Finding = {
@@ -286,6 +298,8 @@ export type AnalysisResult = {
   dataNotes: string[];
   /** Offizielle EU-Rückrufe (Safety Gate), die zu diesem Fahrzeug passen. */
   recalls: import("./analysis/recalls").MatchedRecall[];
+  /** Gespeicherte Typ-Recherche (Rohdaten für Neuberechnung im Browser); fehlt bei älteren Analysen. */
+  research?: ResearchEntry | null;
   /** Von Kunden gemeldete, freigegebene Probleme (Rohdaten für Neuberechnung im Browser). */
   community: import("./analysis/community").CommunityIssue[];
   /** Erfahrungen aus dem Forum (KI-ausgelesen, mit Link zum Beitrag); fehlt bei älteren gespeicherten Analysen. */

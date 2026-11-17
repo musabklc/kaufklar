@@ -1,9 +1,9 @@
 import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
-import { AiAuditSchema, ExtractionSchema, FinderSchema, ForumInsightsSchema, InspectionSchema, ModerationSchema, ServiceBookSchema, type FinderInput, type ReportInput, type Vehicle } from "../types";
-import { AiError, webSearchEnabled, type AiProvider, type ForumPostInput, type ImageInput } from "./provider";
-import { AUDIT_SYSTEM, EXTRACT_SYSTEM, FINDER_SYSTEM, FORUM_SYSTEM, INSPECT_SYSTEM, MODERATE_SYSTEM, SERVICEBOOK_SYSTEM } from "./prompts";
+import { AiAuditSchema, ExtractionSchema, FinderSchema, ForumInsightsSchema, InspectionSchema, ModerationSchema, ResearchSchema, ServiceBookSchema, type FinderInput, type ReportInput, type Source, type Vehicle } from "../types";
+import { AiError, type AiProvider, type ForumPostInput, type ImageInput } from "./provider";
+import { AUDIT_SYSTEM, EXTRACT_SYSTEM, FINDER_SYSTEM, FORUM_SYSTEM, INSPECT_SYSTEM, MODERATE_SYSTEM, RESEARCH_FORMAT_SYSTEM, RESEARCH_SYSTEM, SERVICEBOOK_SYSTEM } from "./prompts";
 import { parseLenient, toGeminiSchema } from "./schema";
 import { aiBudgetExceeded, logEvent } from "../server/usage";
 
@@ -27,7 +27,7 @@ const exhaustedUntil = new Map<string, number>();
 const statusOf = (e: unknown) => (e as { status?: number }).status ?? (e as { statusCode?: number }).statusCode;
 
 
-const OPS = new Map([[EXTRACT_SYSTEM, "extract"], [AUDIT_SYSTEM, "audit"], [MODERATE_SYSTEM, "moderate"], [FORUM_SYSTEM, "forum"], [FINDER_SYSTEM, "finder"], [INSPECT_SYSTEM, "inspect"], [SERVICEBOOK_SYSTEM, "servicebook"]]);
+const OPS = new Map([[EXTRACT_SYSTEM, "extract"], [AUDIT_SYSTEM, "audit"], [MODERATE_SYSTEM, "moderate"], [FORUM_SYSTEM, "forum"], [FINDER_SYSTEM, "finder"], [INSPECT_SYSTEM, "inspect"], [SERVICEBOOK_SYSTEM, "servicebook"], [RESEARCH_FORMAT_SYSTEM, "research-format"]]);
 
 type Part = { type: "text"; text: string } | { type: "image"; data: string; mime_type: string };
 
@@ -108,6 +108,42 @@ export class GeminiProvider implements AiProvider {
     }
   }
 
+  /**
+   * Recherchebericht als Fließtext mit erzwungener Google-Suche. Nur so hängt Google zuverlässig die Belege an
+   * (bei JSON-Ausgabe fehlen sie meist). Die Quellen landen in `sources` – echte Such-Treffer, keine von der KI geschriebenen Links.
+   */
+  private async report(system: string, input: Part[], sources: Source[]): Promise<string> {
+    if (await aiBudgetExceeded()) throw new AiError("Das Tageslimit für KI-Prüfungen ist erreicht. Bitte morgen erneut versuchen.");
+    const now = Date.now();
+    let last: unknown = new AiError("Das KI-Kontingent ist gerade ausgeschöpft. Bitte später erneut versuchen.");
+    for (const model of MODELS.filter((m) => m.startsWith("gemini") && (exhaustedUntil.get(m) ?? 0) < now)) {
+      const started = Date.now();
+      try {
+        const it = await this.client.interactions.create(
+          { model, store: false, system_instruction: system, input: [{ type: "user_input", content: input }], generation_config: { thinking_level: "low", tool_choice: "any" }, tools: [{ type: "google_search" }] },
+          { timeout_ms: SEARCH_PER_MODEL_MS, retries: { strategy: "none" } },
+        );
+        const u = it.usage;
+        await logEvent({ kind: "ai", op: "research", model, ok: it.status === undefined || it.status === "completed", ms: Date.now() - started, inputTokens: u?.total_input_tokens, outputTokens: (u?.total_output_tokens ?? 0) + (u?.total_thought_tokens ?? 0) || undefined });
+        if ((it.status && it.status !== "completed") || !it.output_text) throw new AiError("Die Recherche war unvollständig.");
+        for (const step of it.steps ?? [])
+          if (step.type === "model_output")
+            for (const c of step.content ?? [])
+              if (c.type === "text")
+                for (const a of c.annotations ?? [])
+                  if (a.type === "url_citation" && a.url?.startsWith("https://") && !sources.some((x) => x.url === a.url) && sources.length < 8)
+                    sources.push({ label: a.title || new URL(a.url).hostname, url: a.url });
+        return it.output_text;
+      } catch (e) {
+        const st = statusOf(e);
+        if (!(e instanceof AiError)) await logEvent({ kind: "ai", op: "research", model, ok: false, ms: Date.now() - started, error: `${st ?? "netz"}: ${(e as Error).message}` });
+        if (st === 429 || st === 404) exhaustedUntil.set(model, now + (st === 429 ? 60 * 60e3 : 24 * 60 * 60e3));
+        last = e;
+      }
+    }
+    throw this.mapError(last);
+  }
+
   private images(images: ImageInput[]): Part[] {
     return images.flatMap((img, i) => [
       { type: "text" as const, text: `Bild ${i + 1}:` },
@@ -129,7 +165,24 @@ export class GeminiProvider implements AiProvider {
       { type: "text", text: `<fahrzeugdaten>\n${JSON.stringify(vehicle, null, 2)}\n</fahrzeugdaten>` },
       { type: "text", text: `<wissensdatenbank>\n${knowledgeSummary || "Keine Treffer in der Datenbank."}\n</wissensdatenbank>` },
       ...this.images(images),
-    ], webSearchEnabled()); // mit Google-Recherche zu Schwachstellen dieses Modells
+    ]); // ohne Google-Suche: Typwissen kommt aus Datenbank und gespeicherter Recherche
+  }
+
+  /** Einmalige Typ-Recherche mit Google-Suche. */
+  async research(vehicle: Vehicle, label: string) {
+    const sources: Source[] = [];
+    const report = await this.report(RESEARCH_SYSTEM, [
+      { type: "text", text: `Heutiges Datum: ${new Date().toLocaleDateString("de-DE")}` },
+      { type: "text", text: `<fahrzeugtyp>
+${label}
+${JSON.stringify({ make: vehicle.make, model: vehicle.model, variant: vehicle.variant, fuel: vehicle.fuel, displacementCcm: vehicle.displacementCcm, powerKw: vehicle.powerKw, engineCode: vehicle.engineCode, transmission: vehicle.transmission, transmissionDetail: vehicle.transmissionDetail }, null, 2)}
+</fahrzeugtyp>` },
+    ], sources);
+    const research = await this.json(ResearchSchema, RESEARCH_FORMAT_SYSTEM, [{ type: "text", text: `<fahrzeugtyp>${label}</fahrzeugtyp>
+<bericht>
+${report}
+</bericht>` }]);
+    return { research, sources };
   }
 
   inspect({ vehicle, images, labels }: { vehicle: Vehicle; images: ImageInput[]; labels: string[] }) {

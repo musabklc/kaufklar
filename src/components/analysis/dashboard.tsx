@@ -63,7 +63,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
 
   function updateComps(user: number[]) {
     const comps: Comp[] = [...r.price.comps.filter((c) => c.source !== "nutzer"), ...user.map((price) => ({ price, source: "nutzer" as const }))];
-    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked };
+    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, research: r.research, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked };
     saveAnalysis(next); // Speicher-Hook rendert die Seite mit den neuen Werten
   }
 
@@ -301,6 +301,17 @@ function WeakPointCard({ w, locked }: { w: WeakPoint; locked: boolean }) {
         <p className="mt-1 text-sm text-foreground/70">{w.component} · {w.origin}{w.relevantFromKm ? ` · relevant ab ca. ${w.relevantFromKm.toLocaleString("de-DE")} km` : ""}</p>
         <p className="mt-3 max-w-3xl">{w.detail}</p>
         {!locked && <p className="mt-2 max-w-3xl"><span className="font-semibold">So erkennst du es:</span> {w.detection}</p>}
+        {!locked && w.sources?.length ? (
+          <p className="mt-2 text-sm text-foreground/70">
+            Quellen der Recherche:{" "}
+            {w.sources.map((s, i) => (
+              <span key={s.url ?? s.label}>
+                {i > 0 && " · "}
+                {safeHref(s.url) ? <a href={safeHref(s.url)} target="_blank" rel="noopener noreferrer nofollow" className="text-brand underline-offset-4 hover:underline">{s.label}</a> : s.label}
+              </span>
+            ))}
+          </p>
+        ) : null}
       </div>
       <div className="sm:text-right">
         {locked ? (
@@ -470,7 +481,7 @@ function EditVehicle({ r }: { r: AnalysisResult }) {
             size="lg"
             className="mt-5 h-12 px-6 text-base"
             onClick={() => {
-              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked });
+              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, research: r.research, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked });
               setOpen(false);
             }}
           >

@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { after } from "next/server";
+import { researchKey } from "@/lib/analysis/research";
+import { getResearch, runResearch } from "@/lib/server/research";
 import { AiError, getProvider } from "@/lib/ai/provider";
 import type { WebListing } from "@/lib/ai/provider";
 import { buildAnalysis } from "@/lib/analysis/engine";
@@ -55,6 +58,14 @@ export async function POST(req: Request) {
   const [body, trim] = [bodyOf(kindText), trimOf(kindText)];
   if (body || trim) dataNotes.push(`Marktcheck: verglichen ${[body && `nur mit ${body}-Angeboten`, trim && `bevorzugt mit ${trim} (sobald genug Angebote da sind)`].filter(Boolean).join(", ")}.`);
 
+  // Gespeicherte Typ-Recherche nutzen; fehlt sie (oder ist sie über ein Jahr alt), einmal im Hintergrund recherchieren
+  const rk = researchKey(vehicle);
+  const research = rk ? await getResearch(rk.key).catch(() => null) : null;
+  if (rk && (!research || research.stale)) {
+    const v = vehicle;
+    after(() => runResearch(rk.key, rk.label, v));
+  }
+
   const provider = await getProvider();
   let aiNote: string | null = provider ? null : "KI-Prüfung nicht aktiv (kein API-Schlüssel konfiguriert). Analyse basiert auf Wissensdatenbank und Regelprüfung.";
 
@@ -65,7 +76,10 @@ export async function POST(req: Request) {
           images,
           // Beim Link-Import hat das Inserat Fotos, wir übermitteln sie nur nicht – dann darf die KI keine "fehlenden Bilder" bemängeln.
           photosNote: origin === "link" && !images.length ? "Prüfe das Inserat. Die Fotos des Inserats liegen dir nicht vor (Link-Import) – bewerte sie nicht und bemängle keine fehlenden Bilder." : undefined,
-          knowledgeSummary: matchKnowledge(vehicle).map((e) => `${e.name}: ${e.weakPoints.map((w) => w.title).join("; ")}`).join("\n"),
+          knowledgeSummary: [
+            ...matchKnowledge(vehicle).map((e) => `${e.name}: ${e.weakPoints.map((w) => w.title).join("; ")}`),
+            ...(research ? [`Gespeicherte Recherche (${research.identifiedAs}): ${research.weakPoints.map((w) => w.title).join("; ")}`] : []),
+          ].join("\n"),
         })
         .catch((e) => {
           // Analyse trotzdem liefern – nur ohne KI-Teil, und das transparent anzeigen.
@@ -111,7 +125,7 @@ export async function POST(req: Request) {
     }),
   );
 
-  const result = { ...buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community }), forum };
+  const result = { ...buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community, research }), forum };
   // Nur gesiegelte, unverändert ausgelesene Inserate fließen in den Index (Schutz vor erfundenen Preisen).
   await Promise.all([recordObservations(vehicle, sealed, web), currentUser().then((u) => storeAnalysis(result, u?.id ?? null))]);
   // "ok" = mit KI-Teil; ohne KI ist die Analyse nur eingeschränkt
