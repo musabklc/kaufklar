@@ -176,3 +176,5 @@
   header, nav, .no-print { display: none !important; }
   body { background: white; }
 }
+
+@keyframes needle { from { transform: rotate(-90deg); opacity: 0; } to { transform: none; opacity: 1; } }

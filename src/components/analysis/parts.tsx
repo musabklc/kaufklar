@@ -102,3 +102,39 @@ export function Section({ id, title, eyebrow, action, children }: { id: string; 
     </section>
   );
 }
+
+/** Preis-Tacho: Nadel zeigt, wie weit das Angebot vom Marktschnitt abweicht (−30 % … +30 %). */
+export function PriceGauge({ pct }: { pct: number | null }) {
+  const R = 52;
+  const at = (p: number) => {
+    const a = Math.PI * (1 - (Math.min(30, Math.max(-30, p)) + 30) / 60);
+    return [64 + R * Math.cos(a), 64 - R * Math.sin(a)] as const;
+  };
+  const arc = (from: number, to: number) => {
+    const [x1, y1] = at(from);
+    const [x2, y2] = at(to);
+    return `M${x1.toFixed(2)} ${y1.toFixed(2)} A${R} ${R} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+  };
+  const zones: [number, number, string][] = [
+    [-30, -20, "var(--warn)"],
+    [-20, 5, "var(--ok)"],
+    [5, 15, "var(--warn)"],
+    [15, 30, "var(--bad)"],
+  ];
+  const [nx, ny] = at(pct ?? 0);
+  return (
+    <svg viewBox="0 0 128 76" className="w-full max-w-64" role="img" aria-label={pct === null ? "Preis noch nicht bewertbar" : `Angebot ${Math.abs(pct)} % ${pct < 0 ? "unter" : "über"} dem Marktschnitt`}>
+      {zones.map(([a, b, c]) => (
+        <path key={a} d={arc(a, b)} fill="none" stroke={pct === null ? "var(--muted)" : c} strokeWidth="10" />
+      ))}
+      {pct !== null && (
+        <g style={{ transformOrigin: "64px 64px", animation: "needle 1s cubic-bezier(.2,.7,.2,1) both" }}>
+          <line x1="64" y1="64" x2={nx} y2={ny} stroke="var(--foreground)" strokeWidth="3" strokeLinecap="round" />
+        </g>
+      )}
+      <circle cx="64" cy="64" r="5" fill="var(--foreground)" />
+      <text x="6" y="75" fontSize="7" fill="var(--muted-foreground)">günstig</text>
+      <text x="122" y="75" fontSize="7" textAnchor="end" fill="var(--muted-foreground)">teuer</text>
+    </svg>
+  );
+}

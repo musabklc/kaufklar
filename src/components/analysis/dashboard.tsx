@@ -18,7 +18,7 @@ import { parseYear } from "@/lib/analysis/knowledge";
 import { AlternativesSection } from "./alternatives-section";
 import { safeHref } from "@/lib/guards";
 import { priceVerdict } from "@/lib/analysis/market";
-import { CopyButton, LevelPill, RiskGauge, ScoreBar, Section, VERDICT, fmt, range } from "./parts";
+import { CopyButton, LevelPill, PriceGauge, RiskGauge, ScoreBar, Section, VERDICT, fmt, range } from "./parts";
 
 const NAV = [
   ["uebersicht", "Übersicht"],
@@ -89,6 +89,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
       </nav>
 
       <div className="mt-6 space-y-6">
+        <PriceCheck r={r} />
         <Overview r={r} />
         <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} />
         <Findings items={r.findings} />
@@ -137,6 +138,42 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Marktcheck ganz oben: Tacho + Urteil; Details im Abschnitt „Preis“. */
+function PriceCheck({ r }: { r: AnalysisResult }) {
+  const p = r.price;
+  const verdict = priceVerdict(p.asking, p.marketEstimate);
+  const pct = verdict && p.asking && p.marketEstimate ? Math.round((p.asking / p.marketEstimate - 1) * 100) : null;
+  const color = { ok: "text-ok", warn: "text-warn", bad: "text-bad" };
+  return (
+    <section aria-label="Marktcheck" className="grid items-center gap-6 bg-card p-6 sm:grid-cols-[16rem_1fr] sm:p-8">
+      <div className="mx-auto w-full max-w-64">
+        <PriceGauge pct={pct} />
+      </div>
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">Marktcheck</p>
+        {verdict ? (
+          <>
+            <p className={`mt-1 text-3xl font-bold tracking-tight sm:text-4xl ${color[verdict.tone]}`}>{verdict.label}</p>
+            <p className="mt-2 text-foreground/80">{verdict.detail}</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Angebot <b className="text-foreground">{fmt(p.asking!)}</b> · Marktschnitt <b className="text-foreground">{fmt(p.marketEstimate!)}</b> · aus {p.comps.length} geprüften Vergleichsangeboten ·{" "}
+              <a href="#preis" className="font-medium text-brand underline underline-offset-4">Details</a>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-1 text-2xl font-bold tracking-tight">{p.asking === null ? "Kein Preis angegeben" : "Noch zu wenig Vergleichsangebote"}</p>
+            <p className="mt-2 text-foreground/80">
+              {p.asking === null ? "Trag den Preis aus dem Inserat ein, dann ordnen wir ihn ein." : `Gefunden: ${p.comps.length} von mindestens 3. Ohne genug echte Angebote nennen wir bewusst keinen Marktwert.`}
+            </p>
+            <a href="#preis" className="mt-3 inline-block text-sm font-medium text-brand underline underline-offset-4">Vergleichspreise selbst ergänzen</a>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -357,16 +394,8 @@ function PriceSection({ r, onComps }: { r: AnalysisResult; onComps: (c: number[]
   const hi = Math.max(...pts) * 1.05;
   const pos = (x: number) => `${((x - lo) / (hi - lo)) * 100}%`;
   const due = r.dueCosts.reduce((s, c) => [s[0] + c.min, s[1] + c.max], [0, 0]);
-  const verdict = priceVerdict(p.asking, p.marketEstimate);
-  const toneCls = { ok: "border-ok/40 bg-ok/10 text-ok", warn: "border-warn/40 bg-warn/10 text-warn", bad: "border-bad/40 bg-bad/10 text-bad" };
   return (
     <Section id="preis" eyebrow="Markt" title="Preisbewertung" action={<Button variant="outline" size="lg" className="h-10" onClick={() => setEdit(!edit)}>{edit ? "Fertig" : "Vergleichspreise bearbeiten"}</Button>}>
-      {verdict && (
-        <div className={`mb-5 rounded-xl border p-4 ${toneCls[verdict.tone]}`}>
-          <p className="text-xl font-semibold">Marktcheck: {verdict.label}</p>
-          <p className="mt-1 text-sm text-foreground/80">{verdict.detail}</p>
-        </div>
-      )}
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat label="Angebotspreis" value={p.asking !== null ? fmt(p.asking) : "nicht angegeben"} />
         <Stat label="Geschätzter Marktwert" value={p.marketEstimate !== null ? fmt(p.marketEstimate) : "keine Datenbasis"} muted={p.marketEstimate === null} />
