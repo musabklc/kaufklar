@@ -68,3 +68,51 @@ export function pagePrice(html: string): number | null {
   const p = m ? Math.round(Number(m[1])) : null;
   return p !== null && p >= 500 && p <= 500000 ? p : null;
 }
+
+// ---------- Kleinanzeigen-Suche (robots.txt erlaubt /s-autos/) ----------
+
+const ENGINE = /^(tdi|tsi|tfsi|cdi|hdi|dci|crdi|cdti|d4d|ecoboost|multiair|puretech|bluehdi|e-?tron|hybrid)$/i;
+const NUMERIC = /^(\d{3}[a-z]{0,2}|\d\.\d)$/i; // 320d, 500, 2.0
+const SERIES = /^(\d(er)?|[a-z]-klasse|klasse)$/i; // "3er", "E-Klasse": stehen oft nicht im Inseratstitel
+
+/** Suchbegriffe: Marke, Modell, Motor-Kennung aus der Variante. eng=false = breitere Suche nur nach Marke und Modell. */
+export function kaQuery(v: Pick<Vehicle, "make" | "model" | "variant">, eng = true): string {
+  const make = (v.make ?? "").toLowerCase().replace(/-benz$/, "");
+  const tokens = (v.variant ?? "").toLowerCase().split(/[\s/]+/).filter(Boolean);
+  const engine = eng ? [tokens.find((t) => NUMERIC.test(t)), tokens.find((t) => ENGINE.test(t))].filter(Boolean) as string[] : [];
+  const model = (v.model ?? "").toLowerCase();
+  const words = [make, ...(engine.length && SERIES.test(model) ? [] : model.split(/\s+/)), ...engine];
+  return [...new Set(words.filter(Boolean))].map((w) => encodeURIComponent(w.replace(/\s+/g, "-"))).join("-");
+}
+
+const num = (s: string | undefined) => (s ? Number(s.replace(/\./g, "")) : null);
+
+/** Trefferliste einer Kleinanzeigen-Autosuche: Titel, Preis, km, Erstzulassung, Link. Anzeigen ohne Preis fallen raus. */
+export function parseKaSearch(html: string): Listing[] {
+  return html
+    .split('data-adid="')
+    .slice(1)
+    .map((chunk) => {
+      const c = chunk.split("<article")[0];
+      const href = c.match(/data-href="(\/s-anzeige\/[^"]+)"/)?.[1];
+      const title = c.match(/<h3[^>]*>\s*<a[^>]*>([^<]+)<\/a>/)?.[1]?.replace(/&amp;/g, "&").trim();
+      const text = c.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;| | /g, " ").replace(/\s+/g, " ");
+      const price = num(text.match(/(\d{1,3}(?:\.\d{3})+|\d{3,6}) €/)?.[1]);
+      const km = num(text.match(/(\d{1,3}(?:\.\d{3})+|\d{1,6}) km\b/)?.[1]);
+      const year = num(text.match(/EZ \d{2}\/(\d{4})/)?.[1]);
+      return href && title && price ? { title, priceEur: price, year, mileageKm: km, url: `https://www.kleinanzeigen.de${href}` } : null;
+    })
+    .filter((l): l is Listing => l !== null);
+}
+
+/** Such-URL mit Filtern für Baujahr ±2 und Kilometer ±40 % direkt bei Kleinanzeigen. */
+export function kaSearchUrl(v: Pick<Vehicle, "make" | "model" | "variant" | "firstRegistration" | "mileageKm">, eng = true): string | null {
+  const q = kaQuery(v, eng);
+  if (!q) return null;
+  const year = parseYear(v.firstRegistration);
+  const f = [
+    year ? `autos.ez_i:${year - 2}%2C${year + 2}` : "",
+    v.mileageKm ? `autos.km_i:${Math.round(v.mileageKm * 0.6)}%2C${Math.round(v.mileageKm * 1.4)}` : "",
+  ].filter(Boolean);
+  return `https://www.kleinanzeigen.de/s-autos/${q}/k0c216${f.map((x) => `+${x}`).join("")}`;
+}

@@ -2,10 +2,9 @@ import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { AiAuditSchema, ExtractionSchema, ModerationSchema, type ReportInput, type Vehicle } from "../types";
-import { AiError, webSearchEnabled, type AiProvider, type ImageInput, type WebListing } from "./provider";
-import { AUDIT_SYSTEM, EXTRACT_SYSTEM, MODERATE_SYSTEM, PRICE_SYSTEM } from "./prompts";
+import { AiError, webSearchEnabled, type AiProvider, type ImageInput } from "./provider";
+import { AUDIT_SYSTEM, EXTRACT_SYSTEM, MODERATE_SYSTEM } from "./prompts";
 import { parseLenient, toGeminiSchema } from "./schema";
-import { plausibleListings } from "../analysis/market";
 
 /**
  * Modellkette: Jedes Gratis-Modell hat ein eigenes Tageskontingent (gemini-3.8-flash nur ca. 20 Anfragen/Tag).
@@ -26,11 +25,6 @@ const SEARCH_TOTAL_MS = 110_000;
 const exhaustedUntil = new Map<string, number>();
 const statusOf = (e: unknown) => (e as { status?: number }).status ?? (e as { statusCode?: number }).statusCode;
 
-const WebListingsSchema = z.object({
-  listings: z.array(
-    z.object({ title: z.string(), priceEur: z.number(), year: z.number().nullable(), mileageKm: z.number().nullable(), url: z.string() }),
-  ),
-});
 
 type Part = { type: "text"; text: string } | { type: "image"; data: string; mime_type: string };
 
@@ -130,14 +124,5 @@ export class GeminiProvider implements AiProvider {
     return this.json(ModerationSchema, MODERATE_SYSTEM, [{ type: "text", text: `<meldung>
 ${JSON.stringify(r, null, 2)}
 </meldung>` }]);
-  }
-
-  /** Nur mit bezahltem Gemini-Tarif (Google-Suche ist im Gratis-Tarif nicht enthalten). */
-  async searchPrices(v: Vehicle, portal: string): Promise<WebListing[]> {
-    const q = [v.make, v.model, v.variant, v.fuel, v.powerKw && `${v.powerKw} kW`, v.firstRegistration && `EZ ${v.firstRegistration}`, v.mileageKm && `${v.mileageKm} km`].filter(Boolean).join(", ");
-    const out = await this.json(WebListingsSchema, PRICE_SYSTEM, [{ type: "text", text: `Fahrzeug: ${q}
-Suche diesmal nur auf ${portal}.` }], true);
-    // Nur vergleichbare Angebote; Links nur zu echten Portalen (schützt vor erfundenen Links).
-    return plausibleListings(out.listings, v);
   }
 }

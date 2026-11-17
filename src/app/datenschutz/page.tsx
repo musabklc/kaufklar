@@ -45,11 +45,16 @@ export default function Datenschutz() {
       <p>
         Zum Auslesen von Screenshots, zur Prüfung des Inserats und zur Moderation von Meldungen werden Texte und Bilder an die Gemini-API von Google übermittelt.
         Wir nutzen den kostenpflichtigen Tarif. Laut den Nutzungsbedingungen verwendet Google die übermittelten Inhalte in diesem Tarif nicht zur Verbesserung seiner
-        Produkte; sie werden nur für begrenzte Zeit zur Missbrauchserkennung gespeichert. Für den Marktcheck sucht die KI zusätzlich über die Google-Suche nach
-        vergleichbaren Angeboten – dabei werden nur Fahrzeugmerkmale (Marke, Modell, Baujahr, Kilometerstand, Leistung) als Suchbegriffe verwendet.
+        Produkte; sie werden nur für begrenzte Zeit zur Missbrauchserkennung gespeichert. Für die Schwachstellen recherchiert die KI zusätzlich über die Google-Suche –
+        dabei werden nur Fahrzeugmerkmale (Marke, Modell, Baujahr, Motor) als Suchbegriffe verwendet.
         Eine Übermittlung in die USA findet statt (EU-US Data Privacy Framework bzw. Standardvertragsklauseln).
         Mehr: <A href="https://ai.google.dev/gemini-api/terms">Nutzungsbedingungen der Gemini-API</A> und <A href="https://policies.google.com/privacy">Datenschutzerklärung von Google</A>.
         Gib deshalb keine personenbezogenen Daten (Namen, Telefonnummern, Kennzeichen) in Beschreibungen oder Bildern ein.
+      </p>
+      <h3>Marktcheck (Kleinanzeigen)</h3>
+      <p>
+        Für die Preisbewertung ruft unser Server die öffentliche Autosuche von kleinanzeigen.de mit Marke, Modell, Baujahr- und Kilometerbereich auf und öffnet
+        die passendsten Inserate, um Preis und Anbieterart (privat/gewerblich) abzulesen. Dabei werden keine Daten über dich übermittelt; die Anfrage kommt von unserem Server.
       </p>
       <h3>Offene Datenquellen</h3>
       <p>Für Typdaten und Rückrufe werden nur Fahrzeugmerkmale (Marke, Modell, Baujahr, Hubraum, Leistung) mit unserer Datenbank abgeglichen – keine Daten über dich.</p>

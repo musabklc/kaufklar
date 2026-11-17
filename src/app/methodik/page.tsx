@@ -42,7 +42,7 @@ export default function Methodik() {
       <h2>5. Preise & Kaufklar-Preisindex</h2>
       <p>
         Einen Marktwert schätzen wir nur aus mindestens drei Vergleichsangeboten (Median, fairer Bereich = mittlere 50 %). Quellen: der Kaufklar-Preisindex aus anonym gespeicherten,
-        ausgelesenen Inseraten (gleiches Modell, Baujahr ±2, Kilometerstand ±40 %, letzte 18 Monate, Ausreißer gefiltert), optional Websuche-Treffer mit Link, und von dir eingetragene Preise.
+        ausgelesenen Inseraten (gleiches Modell, Baujahr ±2, Kilometerstand ±40 %, letzte 18 Monate, Ausreißer gefiltert), aktuelle Angebote aus einer Kleinanzeigen-Suche (jedes Inserat einzeln geöffnet, Preis dort abgelesen), und von dir eingetragene Preise.
         Ohne genug Vergleichsdaten nennen wir keinen Marktwert.
       </p>
 

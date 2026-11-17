@@ -33,7 +33,7 @@ npm test
 |---|---|
 | `GEMINI_API_KEY` | Kostenlose KI (Auslesen von Screenshots/Links, Inserat-Prüfung, Alternativen). **Im Gratis-Tarif nutzt Google die Eingaben zur Produktverbesserung** – steht so in der Datenschutzseite. |
 | `GEMINI_MODEL` | Standard `gemini-3.8-flash`. |
-| `GEMINI_SEARCH_ENABLED` | `true` = Marktcheck: KI sucht per Google Vergleichsangebote, Kaufklar übernimmt nur Preise, die es im Inserat selbst nachprüfen konnte (AutoScout24, Kleinanzeigen). Nur im **bezahlten** Gemini-Tarif (5.000 Suchen/Monat inklusive). Standard `false`. |
+| `GEMINI_SEARCH_ENABLED` | `true` = die KI recherchiert Schwachstellen per Google-Suche. Nur im **bezahlten** Gemini-Tarif. Standard `false`. |
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Kaufklar-Preisindex. Ohne sie läuft alles, nur ohne automatische Marktpreise. Secret Key nur serverseitig. |
 | `LINK_IMPORT_ENABLED` | `true` aktiviert den Link-Import: AutoScout24 und Kleinanzeigen werden direkt gelesen (getestet 11/2026); mobile.de blockt automatische Abrufe bewusst, dort führt die App zum Screenshot-Weg (Sperren werden nicht umgangen). **Nutzungsbedingungen der Portale vor öffentlichem Betrieb rechtlich prüfen.** |
 
@@ -41,7 +41,7 @@ Ohne jeden Schlüssel funktionieren manuelle Eingabe, Wissensdatenbank, Regelpr�
 
 ## Alleinstellungsmerkmale
 
-- **Kaufklar-Preisindex** (`src/lib/server/price-index.ts`): Jedes per Link/Screenshot ausgelesene Inserat wird anonym gespeichert (Marke, Modell, Baujahr, km, kW, Preis). Vergleichbare Angebote (Baujahr ±2, km ±40 %, letzte 18 Monate, Ausreißer gefiltert) ergeben automatisch den Marktwert – kein manuelles Suchen. Manuelle Eingaben fließen bewusst nicht ein. Mit `GEMINI_SEARCH_ENABLED` kommen zusätzlich Websuche-Treffer mit Links hinzu.
+- **Kaufklar-Preisindex** (`src/lib/server/price-index.ts`): Jedes per Link/Screenshot ausgelesene Inserat wird anonym gespeichert (Marke, Modell, Baujahr, km, kW, Preis). Vergleichbare Angebote (Baujahr ±2, km ±40 %, letzte 18 Monate, Ausreißer gefiltert) ergeben automatisch den Marktwert – kein manuelles Suchen. Manuelle Eingaben fließen bewusst nicht ein. Dazu der **Marktcheck** (`searchKleinanzeigen` in `src/lib/server/link.ts`): bei jeder Analyse eine Kleinanzeigen-Autosuche (robots.txt erlaubt `/s-autos/`) mit Baujahr- und km-Filter; die passendsten 12 Treffer werden einzeln geöffnet, Preis und Privat/Händler direkt im Inserat abgelesen.
 - **Echte Monatskosten** (`src/lib/analysis/costs.ts`): Kfz-Steuer exakt nach KraftStG (alle Regelungen seit 2009, progressiver CO₂-Tarif ab 2021, E-Auto-Befreiung), Sprit, Wartung, absehbare Reparaturen. Getestet mit Rechenbeispielen.
 - **Alternativen im gleichen Budget**: KI-Vorschläge „zuverlässiger / schöner / sparsamer / mehr Platz“ mit Preisindex-Daten und Suchlink.
 - **Inserate-Vergleich** (`/vergleich`, `src/lib/analysis/compare.ts`): transparente Rangfolge mit Begründung; Kosten werden nur über Posten verglichen, die für alle Autos bekannt sind.
@@ -103,7 +103,7 @@ src/
     analysis/engine.ts       Deterministische Analyse: Scores, Preis, Verhandlung, Checklisten
     analysis/engine.test.ts  Tests (node --test)
     ai/provider.ts           Austauschbare KI-Schnittstelle
-    ai/gemini.ts             Google-Gemini-Implementierung (Gratis-Tarif, JSON-Schema, Vision, optional Websuche)
+    ai/gemini.ts             Google-Gemini-Implementierung (JSON-Schema, Vision, optional Google-Recherche)
     ai/schema.ts             zod → Gemini-JSON-Schema, tolerante Validierung
     analysis/costs.ts        Kfz-Steuer + Monatskosten
     analysis/compare.ts      Inserate-Vergleich
@@ -141,7 +141,7 @@ src/
 | Analyse, Scores, Preis, Checkliste, Fragen, Probefahrt, Verhandlung, Fazit | fertig |
 | Preisindex (Supabase) | fertig und live getestet (Schreiben, Lesen, Duplikatschutz per Fingerabdruck). Startet leer und wird mit jeder Analyse besser |
 | Gemini-Anbindung | fertig und live getestet (Screenshot-Auslesen ca. 4 s, Inserat-Prüfung ca. 15–30 s) |
-| Websuche nach Vergleichsangeboten | fertig, nur mit bezahltem Gemini-Tarif nutzbar |
+| Marktcheck mit echten Vergleichsangeboten | fertig (Kleinanzeigen-Suche, ohne KI) |
 | Konten, Bezahlung (Stripe) | **noch nicht implementiert** |
 | Ratelimit | In-Memory pro Instanz; für Serverless/mehrere Instanzen auf Redis umstellen |
 | Impressum | fehlt (vor Livegang Pflicht) |

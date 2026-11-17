@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { AiError, getProvider, webSearchEnabled } from "@/lib/ai/provider";
+import { AiError, getProvider } from "@/lib/ai/provider";
 import type { WebListing } from "@/lib/ai/provider";
 import { buildAnalysis } from "@/lib/analysis/engine";
 import { matchKnowledge } from "@/lib/analysis/knowledge";
 import { fail, json, rateLimited, readImages } from "@/lib/server/http";
-import { verifyListings } from "@/lib/server/link";
+import { searchKleinanzeigen, verifyListings } from "@/lib/server/link";
 import { findComparables, modelMedian, recordObservations } from "@/lib/server/price-index";
 import { eeaLookup } from "@/lib/server/eea";
 import { recallsFor } from "@/lib/server/recalls";
@@ -64,18 +64,14 @@ export async function POST(req: Request) {
           return null;
         })
     : Promise.resolve(null);
-  const webP: Promise<WebListing[]> =
-    provider?.searchPrices && webSearchEnabled()
-      ? // Zwei Suchen parallel (je ein Portal) = mehr prüfbare Angebote
-        Promise.all(["AutoScout24", "Kleinanzeigen"].map((p) => provider.searchPrices!(vehicle, p).catch((e) => (console.error("price search failed", p, e), []))))
-          .then((lists) => lists.flat())
-          .then(async (found) => {
-            const ok = await verifyListings(found, vehicle.model);
-            console.info(`marktcheck: ${found.length} gefunden, ${ok.length} im Inserat geprüft`, found.map((f) => f.url || "(kein Portal-Link)"));
-            return ok;
-          })
-          .catch((e) => (console.error("price search failed", e), []))
-      : Promise.resolve([]);
+  // Marktcheck: Kleinanzeigen-Trefferliste (echte Preise, gefiltert nach Baujahr/km), danach jedes Inserat einzeln geprüft.
+  const webP: Promise<WebListing[]> = searchKleinanzeigen(vehicle)
+    .then(async (ka) => {
+      const ok = await verifyListings(ka.slice(0, 12), vehicle.make);
+      console.info(`marktcheck: ${ka.length} Kleinanzeigen-Treffer, ${ok.length} im Inserat geprüft`);
+      return ok;
+    })
+    .catch((e) => (console.error("marktcheck failed", e), [] as WebListing[]));
 
   const [ai, web, indexComps, recalls, community] = await Promise.all([auditP, webP, findComparables(vehicle), recallsFor(vehicle, eea?.typeApprovals ?? []), communityIssuesFor(vehicle)]);
 

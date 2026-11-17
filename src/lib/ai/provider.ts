@@ -11,7 +11,6 @@ export interface AiProvider {
   audit(input: { vehicle: Vehicle; knowledgeSummary: string; images: ImageInput[]; photosNote?: string }): Promise<AiAudit>;
   moderate(report: ReportInput): Promise<Moderation>;
   /** Optional: Vergleichsangebote per Websuche (kostenpflichtige Tarife). */
-  searchPrices?(vehicle: Vehicle, portal: string): Promise<WebListing[]>;
 }
 
 export class AiError extends Error {}

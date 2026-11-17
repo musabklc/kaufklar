@@ -1,7 +1,9 @@
 import "server-only";
 
 import { LinkError, validateListingUrl } from "../guards";
-import { pagePrice, pageSeller } from "../analysis/market";
+import { kaSearchUrl, pagePrice, pageSeller, parseKaSearch, plausibleListings } from "../analysis/market";
+import { parseYear } from "../analysis/knowledge";
+import type { Vehicle } from "../types";
 import type { WebListing } from "../ai/provider";
 
 export { LinkError };
@@ -69,16 +71,17 @@ async function fetchPage(start: URL): Promise<{ res: Response | null; url: URL }
  * Gegenprüfung der KI-Recherche: Jedes gefundene Inserat wird geöffnet und der echte Preis von der Seite übernommen.
  * Was sich nicht prüfen lässt (mobile.de blockt bewusst, Seite weg, anderes Modell), fällt raus.
  */
-export async function verifyListings(list: WebListing[], model: string | null): Promise<WebListing[]> {
+export async function verifyListings(list: WebListing[], make: string | null): Promise<WebListing[]> {
   const checked = await Promise.all(
-    list.slice(0, 16).map(async (l): Promise<WebListing | null> => {
+    list.slice(0, 20).map(async (l): Promise<WebListing | null> => {
       try {
         const url = validateListingUrl(l.url);
         if (url.hostname.endsWith("mobile.de")) return null;
         const { res } = await fetchPage(url);
         if (!res?.ok) return null;
         const html = (await res.text()).slice(0, MAX_BYTES);
-        if (model && !html.toLowerCase().includes(model.toLowerCase())) return null;
+        // Gegen erfundene Links: die Seite muss die Marke nennen ("Mercedes-Benz" -> "mercedes")
+        if (make && !html.toLowerCase().includes(make.toLowerCase().split(/[\s-]/)[0])) return null;
         const price = pagePrice(html);
         return price ? { ...l, priceEur: price, seller: pageSeller(html) } : null;
       } catch {
@@ -88,4 +91,22 @@ export async function verifyListings(list: WebListing[], model: string | null): 
   );
   const seen = new Set<string>();
   return checked.filter((l): l is WebListing => l !== null && !seen.has(l.url) && Boolean(seen.add(l.url)));
+}
+
+/**
+ * Kleinanzeigen-Autosuche (robots.txt erlaubt /s-autos/): eine Trefferliste mit echten Preisen.
+ * Erst genau (mit Motor), bei zu wenig passenden Treffern zusätzlich breiter (nur Marke und Modell).
+ * Liefert die passendsten Angebote zuerst (Baujahr und km am nächsten am gesuchten Auto).
+ */
+export async function searchKleinanzeigen(v: Vehicle): Promise<WebListing[]> {
+  const pull = async (url: string | null): Promise<WebListing[]> => {
+    if (!url) return [];
+    const { res } = await fetchPage(new URL(url));
+    return res?.ok ? plausibleListings(parseKaSearch((await res.text()).slice(0, MAX_BYTES)), v) : [];
+  };
+  let found = await pull(kaSearchUrl(v));
+  if (found.length < 8) found = [...found, ...(await pull(kaSearchUrl(v, false)))];
+  const year = parseYear(v.firstRegistration);
+  const dist = (l: WebListing) => (year && l.year ? Math.abs(l.year - year) : 1) + (v.mileageKm && l.mileageKm ? Math.abs(l.mileageKm - v.mileageKm) / 25000 : 1);
+  return found.sort((a, b) => dist(a) - dist(b));
 }
