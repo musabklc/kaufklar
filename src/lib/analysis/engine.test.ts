@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildAnalysis } from "./engine.ts";
+import { huPlausible, isHuTopic } from "./engine.ts";
 import { matchKnowledge } from "./knowledge.ts";
 import type { Vehicle } from "../types.ts";
 
@@ -87,4 +88,13 @@ test("Im Inserat erledigte Reparatur zählt nicht mehr als akutes Risiko", () =>
 test("Erwähnung ohne Reparatur zählt nicht als erledigt", () => {
   const r = run({ description: "Steuerkette macht beim Kaltstart kurz Geräusche." });
   assert.equal(r.weakPoints.find((w) => w.id === "n47-kette")!.relevantNow, true);
+});
+
+test("HU 08/2028 im November 2026 ist bei einem 2012er normal (frische HU, 24 Monate)", () => {
+  const now = new Date(2026, 10, 17);
+  assert.ok(huPlausible(new Date(2028, 7, 1), now, 14));
+  assert.ok(!huPlausible(new Date(2029, 7, 1), now, 14)); // 33 Monate: nicht möglich
+  assert.ok(huPlausible(new Date(2029, 7, 1), now, 1)); // Neuwagen: erste HU nach 36 Monaten
+  assert.ok(isHuTopic("Unplausibles HU-Datum (TÜV 08/2028)"));
+  assert.ok(!isHuTopic("Hubraum passt nicht zur Leistung"));
 });

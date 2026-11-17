@@ -69,6 +69,19 @@ export type BuildInput = {
   now?: Date;
 };
 
+/** Betrifft ein Punkt die HU/TÜV? Das beurteilt nur die Regelprüfung, nie die KI. */
+export const isHuTopic = (text: string) => /\b(HU|TÜV|Hauptuntersuchung|Prüfplakette|Plakette)\b/i.test(text);
+
+/**
+ * Kann die HU so weit in der Zukunft liegen? Nach einer frischen HU gilt sie 24 Monate, beim Neuwagen die erste 36 Monate.
+ * Einen Monat Spielraum, weil im Inserat nur Monat/Jahr steht.
+ */
+export function huPlausible(hu: Date, now: Date, ageYears: number | null): boolean {
+  const months = (hu.getFullYear() - now.getFullYear()) * 12 + (hu.getMonth() - now.getMonth());
+  const allowed = ageYears !== null && ageYears < 3 ? 36 : 24;
+  return months <= allowed + 1;
+}
+
 export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alternatives = [], dataNotes = [], recalls = [], community = [], now = new Date() }: BuildInput): AnalysisResult {
   const km = v.mileageKm;
   const reg = parseMonthYear(v.firstRegistration);
@@ -190,6 +203,8 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   const huSoon = hu !== null && !huExpired && hu.getTime() - now.getTime() < 90 * 864e5;
   if (huExpired) f("HU/TÜV abgelaufen", "Das Fahrzeug darf ohne gültige HU nur eingeschränkt bewegt werden; mögliche Mängel sind unbekannt.", "bestaetigt", "hoch", `HU bis ${v.inspectionDue}`);
   else if (huSoon) f("HU/TÜV bald fällig", "Kosten und mögliche Mängel der anstehenden HU einplanen.", "bestaetigt", "niedrig", `HU bis ${v.inspectionDue}`);
+  else if (hu && !huPlausible(hu, now, age))
+    f("HU-Datum ungewöhnlich weit in der Zukunft", "Eine HU gilt bei Gebrauchtwagen höchstens 24 Monate (bei der ersten HU eines Neuwagens 36). Termin im Fahrzeugschein und an der Plakette prüfen – vielleicht nur ein Tippfehler.", "pruefen", "niedrig", `HU bis ${v.inspectionDue}`);
   if (v.accidentStatus === "Unfallschaden") f("Unfallschaden angegeben", "Art und Umfang des Schadens klären, Gutachten verlangen.", "bestaetigt", "hoch", "Inseratsangabe");
   if (v.accidentStatus === "reparierter Unfallschaden") f("Reparierter Unfallschaden", "Reparaturrechnung und ggf. Gutachten verlangen; fachgerechte Instandsetzung prüfen lassen.", "bestaetigt", "mittel", "Inseratsangabe");
   if (v.knownDamage) f("Vom Verkäufer genannte Schäden", v.knownDamage, "bestaetigt", "mittel", "Inseratsangabe");
@@ -244,8 +259,9 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
     price.note = `Nicht genug Vergleichsdaten${comps.length ? ` (bisher ${comps.length}: ${sourceText})` : ""}. Der Tachoklar-Preisindex wächst mit jeder Analyse; bis dahin kannst du selbst Vergleichspreise ergänzen (gleiches Modell, ähnliches Baujahr und km). Ohne mindestens 3 Vergleichswerte nennen wir bewusst keinen Marktwert.`;
   }
 
+  // HU/TÜV prüft allein die Regelprüfung oben (mit echtem heutigem Datum) – die KI hat sich dabei schon verrechnet
   if (ai)
-    for (const a of ai.listingFindings) findings.push({ ...a, provenance: "ki" });
+    for (const a of ai.listingFindings) if (!isHuTopic(`${a.title} ${a.detail}`)) findings.push({ ...a, provenance: "ki" });
   findings.sort((a, b) => LEVEL_ORDER[a.severity] - LEVEL_ORDER[b.severity]);
 
   // ---------- Scores ----------
