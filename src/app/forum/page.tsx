@@ -46,6 +46,7 @@ async function Boards() {
         </div>
         {user ? (
           <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
+            {admin && <Link href="/admin" className="rounded-full bg-card px-4 py-2 hover:underline">Dashboard</Link>}
             {admin && (
               <Link href="/forum/moderation" className="rounded-full bg-warn-soft px-4 py-2 hover:underline">
                 Moderation{openReports ? ` (${openReports})` : ""}
