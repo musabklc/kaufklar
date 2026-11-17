@@ -5,6 +5,7 @@ import { AiAuditSchema, ExtractionSchema, ModerationSchema, type ReportInput, ty
 import { AiError, type AiProvider, type ImageInput, type WebListing } from "./provider";
 import { AUDIT_SYSTEM, EXTRACT_SYSTEM, MODERATE_SYSTEM, PRICE_SYSTEM } from "./prompts";
 import { parseLenient, toGeminiSchema } from "./schema";
+import { plausibleListings } from "../analysis/market";
 
 /**
  * Modellkette: Jedes Gratis-Modell hat ein eigenes Tageskontingent (gemini-3.8-flash nur ca. 20 Anfragen/Tag).
@@ -27,7 +28,6 @@ const WebListingsSchema = z.object({
     z.object({ title: z.string(), priceEur: z.number(), year: z.number().nullable(), mileageKm: z.number().nullable(), url: z.string() }),
   ),
 });
-const PORTALS = /(^|\.)(mobile\.de|autoscout24\.(de|at|com)|kleinanzeigen\.de|heycar\.com|pkw\.de|autohero\.com|carwow\.de|meinauto\.de|automobile\.de)$/;
 
 type Part = { type: "text"; text: string } | { type: "image"; data: string; mime_type: string };
 
@@ -39,7 +39,7 @@ export class GeminiProvider implements AiProvider {
     const now = Date.now();
     const deadline = now + TOTAL_MS;
     const candidates = MODELS.filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
-    let last: unknown = new AiError("Das kostenlose KI-Kontingent ist für heute ausgeschöpft. Bitte morgen erneut versuchen.");
+    let last: unknown = new AiError("Das KI-Kontingent ist gerade ausgeschöpft. Bitte später erneut versuchen.");
     for (const model of candidates) {
       const left = deadline - Date.now();
       if (left < 5_000) break;
@@ -70,7 +70,7 @@ export class GeminiProvider implements AiProvider {
     const status = statusOf(e);
     if (!status) return e;
     console.error("gemini error", status, (e as Error).message);
-    if (status === 429 || status === 404) return new AiError("Das kostenlose KI-Kontingent ist für heute ausgeschöpft. Bitte später erneut versuchen.");
+    if (status === 429 || status === 404) return new AiError("Das KI-Kontingent ist gerade ausgeschöpft. Bitte später erneut versuchen.");
     if (status === 401 || status === 403) return new AiError("Der Gemini-API-Schlüssel ist ungültig oder nicht freigeschaltet.");
     return new AiError(`KI-Dienst nicht erreichbar (${status}).`);
   }
@@ -133,14 +133,7 @@ ${JSON.stringify(r, null, 2)}
   async searchPrices(v: Vehicle): Promise<WebListing[]> {
     const q = [v.make, v.model, v.variant, v.fuel, v.powerKw && `${v.powerKw} kW`, v.firstRegistration && `EZ ${v.firstRegistration}`, v.mileageKm && `${v.mileageKm} km`].filter(Boolean).join(", ");
     const out = await this.json(WebListingsSchema, PRICE_SYSTEM, [{ type: "text", text: `Fahrzeug: ${q}` }], true);
-    // Nur echte Inseratsportale und plausible Preise übernehmen – schützt vor erfundenen Links.
-    return out.listings.filter((l) => {
-      try {
-        const u = new URL(l.url);
-        return u.protocol === "https:" && PORTALS.test(u.hostname) && l.priceEur >= 500 && l.priceEur <= 500000;
-      } catch {
-        return false;
-      }
-    });
+    // Nur vergleichbare Angebote; Links nur zu echten Portalen (schützt vor erfundenen Links).
+    return plausibleListings(out.listings, v);
   }
 }

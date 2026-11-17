@@ -44,8 +44,10 @@ export default function Datenschutz() {
       <h3>Künstliche Intelligenz (Google Gemini)</h3>
       <p>
         Zum Auslesen von Screenshots, zur Prüfung des Inserats und zur Moderation von Meldungen werden Texte und Bilder an die Gemini-API von Google übermittelt.
-        Wir nutzen den kostenlosen Tarif. <b>Im kostenlosen Tarif verwendet Google die übermittelten Inhalte zur Verbesserung seiner Produkte; Inhalte können dabei auch von
-        Menschen geprüft werden.</b> Eine Übermittlung in die USA findet statt (EU-US Data Privacy Framework bzw. Standardvertragsklauseln).
+        Wir nutzen den kostenpflichtigen Tarif. Laut den Nutzungsbedingungen verwendet Google die übermittelten Inhalte in diesem Tarif nicht zur Verbesserung seiner
+        Produkte; sie werden nur für begrenzte Zeit zur Missbrauchserkennung gespeichert. Für den Marktcheck sucht die KI zusätzlich über die Google-Suche nach
+        vergleichbaren Angeboten – dabei werden nur Fahrzeugmerkmale (Marke, Modell, Baujahr, Kilometerstand, Leistung) als Suchbegriffe verwendet.
+        Eine Übermittlung in die USA findet statt (EU-US Data Privacy Framework bzw. Standardvertragsklauseln).
         Mehr: <A href="https://ai.google.dev/gemini-api/terms">Nutzungsbedingungen der Gemini-API</A> und <A href="https://policies.google.com/privacy">Datenschutzerklärung von Google</A>.
         Gib deshalb keine personenbezogenen Daten (Namen, Telefonnummern, Kennzeichen) in Beschreibungen oder Bildern ein.
       </p>

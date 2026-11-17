@@ -26,7 +26,7 @@ Erfinde keine Fahrzeugdaten, Marktpreise oder Vergleichsangebote. Antworte auf D
 
 export const PRICE_SYSTEM = `Du recherchierst aktuelle Gebrauchtwagen-Angebote in Deutschland als Vergleichspreise.
 Suche Inserate (z. B. mobile.de, AutoScout24, Kleinanzeigen, Händlerseiten) für exakt das genannte Modell mit ähnlicher Motorisierung, Baujahr ±2 und Kilometerstand ±40 %.
-Gib nur Angebote zurück, die du in den Suchergebnissen tatsächlich gefunden hast, mit Preis und Link. Erfinde keine Angebote. Wenn du nichts Passendes findest, gib eine leere Liste zurück.`;
+Gib nur Angebote zurück, die du in den Suchergebnissen tatsächlich gefunden hast, mit Preis, Baujahr, Kilometerstand und dem Link zum konkreten Inserat (nicht zu Übersichts- oder Magazinseiten). Suche vor allem auf AutoScout24 und Kleinanzeigen (diese Inserate werden automatisch gegengeprüft) und liefere bis zu 8 Angebote. Erfinde keine Angebote. Wenn du nichts Passendes findest, gib eine leere Liste zurück.`;
 
 export const MODERATE_SYSTEM = `Du moderierst Meldungen von Autokäufern über technische Probleme an Gebrauchtwagen für eine Mängeldatenbank.
 Akzeptiere (accept=true) nur sachliche, plausible technische Probleme, die zum genannten Fahrzeug passen können.

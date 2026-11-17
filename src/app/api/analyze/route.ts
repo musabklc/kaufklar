@@ -4,6 +4,7 @@ import type { WebListing } from "@/lib/ai/provider";
 import { buildAnalysis } from "@/lib/analysis/engine";
 import { matchKnowledge } from "@/lib/analysis/knowledge";
 import { fail, json, rateLimited, readImages } from "@/lib/server/http";
+import { verifyListings } from "@/lib/server/link";
 import { findComparables, modelMedian, recordObservations } from "@/lib/server/price-index";
 import { eeaLookup } from "@/lib/server/eea";
 import { recallsFor } from "@/lib/server/recalls";
@@ -65,14 +66,17 @@ export async function POST(req: Request) {
     : Promise.resolve(null);
   const webP: Promise<WebListing[]> =
     provider?.searchPrices && webSearchEnabled()
-      ? provider.searchPrices(vehicle).catch((e) => (console.error("price search failed", e), []))
+      ? provider
+          .searchPrices(vehicle)
+          .then((found) => verifyListings(found, vehicle.model))
+          .catch((e) => (console.error("price search failed", e), []))
       : Promise.resolve([]);
 
   const [ai, web, indexComps, recalls, community] = await Promise.all([auditP, webP, findComparables(vehicle), recallsFor(vehicle, eea?.typeApprovals ?? []), communityIssuesFor(vehicle)]);
 
   const comps: Comp[] = [
     ...indexComps,
-    ...web.filter((w) => w.url !== vehicle.listingUrl).map((w) => ({ price: w.priceEur, source: "web" as const, url: w.url, label: w.title })),
+    ...web.filter((w) => !w.url || w.url !== vehicle.listingUrl).map((w) => ({ price: w.priceEur, source: "web" as const, url: w.url || undefined, label: w.title })),
     ...userComps.map((price) => ({ price, source: "nutzer" as const })),
   ];
 

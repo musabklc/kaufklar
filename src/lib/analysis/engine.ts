@@ -218,7 +218,7 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   const bySource = (s: Comp["source"]) => validComps.filter((c) => c.source === s).length;
   const sourceText = [
     bySource("index") && `${bySource("index")} aus dem Kaufklar-Preisindex`,
-    bySource("web") && `${bySource("web")} aus der Websuche`,
+    bySource("web") && `${bySource("web")} per Google-Recherche gefunden, Preis im Inserat geprüft`,
     bySource("nutzer") && `${bySource("nutzer")} von dir eingetragen`,
   ].filter(Boolean).join(", ");
 

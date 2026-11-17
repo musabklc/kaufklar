@@ -17,6 +17,7 @@ import type { Vehicle } from "@/lib/types";
 import { parseYear } from "@/lib/analysis/knowledge";
 import { AlternativesSection } from "./alternatives-section";
 import { safeHref } from "@/lib/guards";
+import { priceVerdict } from "@/lib/analysis/market";
 import { CopyButton, LevelPill, RiskGauge, ScoreBar, Section, VERDICT, fmt, range } from "./parts";
 
 const NAV = [
@@ -356,8 +357,16 @@ function PriceSection({ r, onComps }: { r: AnalysisResult; onComps: (c: number[]
   const hi = Math.max(...pts) * 1.05;
   const pos = (x: number) => `${((x - lo) / (hi - lo)) * 100}%`;
   const due = r.dueCosts.reduce((s, c) => [s[0] + c.min, s[1] + c.max], [0, 0]);
+  const verdict = priceVerdict(p.asking, p.marketEstimate);
+  const toneCls = { ok: "border-ok/40 bg-ok/10 text-ok", warn: "border-warn/40 bg-warn/10 text-warn", bad: "border-bad/40 bg-bad/10 text-bad" };
   return (
     <Section id="preis" eyebrow="Markt" title="Preisbewertung" action={<Button variant="outline" size="lg" className="h-10" onClick={() => setEdit(!edit)}>{edit ? "Fertig" : "Vergleichspreise bearbeiten"}</Button>}>
+      {verdict && (
+        <div className={`mb-5 rounded-xl border p-4 ${toneCls[verdict.tone]}`}>
+          <p className="text-xl font-semibold">Marktcheck: {verdict.label}</p>
+          <p className="mt-1 text-sm text-foreground/80">{verdict.detail}</p>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat label="Angebotspreis" value={p.asking !== null ? fmt(p.asking) : "nicht angegeben"} />
         <Stat label="Geschätzter Marktwert" value={p.marketEstimate !== null ? fmt(p.marketEstimate) : "keine Datenbasis"} muted={p.marketEstimate === null} />

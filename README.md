@@ -33,7 +33,7 @@ npm test
 |---|---|
 | `GEMINI_API_KEY` | Kostenlose KI (Auslesen von Screenshots/Links, Inserat-Prüfung, Alternativen). **Im Gratis-Tarif nutzt Google die Eingaben zur Produktverbesserung** – steht so in der Datenschutzseite. |
 | `GEMINI_MODEL` | Standard `gemini-3.8-flash`. |
-| `GEMINI_SEARCH_ENABLED` | `true` = Websuche nach Vergleichsangeboten. Nur im **bezahlten** Gemini-Tarif (5.000 Suchen/Monat inklusive). Standard `false`. |
+| `GEMINI_SEARCH_ENABLED` | `true` = Marktcheck: KI sucht per Google Vergleichsangebote, Kaufklar übernimmt nur Preise, die es im Inserat selbst nachprüfen konnte (AutoScout24, Kleinanzeigen). Nur im **bezahlten** Gemini-Tarif (5.000 Suchen/Monat inklusive). Standard `false`. |
 | `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Kaufklar-Preisindex. Ohne sie läuft alles, nur ohne automatische Marktpreise. Secret Key nur serverseitig. |
 | `LINK_IMPORT_ENABLED` | `true` aktiviert den Link-Import: AutoScout24 und Kleinanzeigen werden direkt gelesen (getestet 11/2026); mobile.de blockt automatische Abrufe bewusst, dort führt die App zum Screenshot-Weg (Sperren werden nicht umgangen). **Nutzungsbedingungen der Portale vor öffentlichem Betrieb rechtlich prüfen.** |
 
