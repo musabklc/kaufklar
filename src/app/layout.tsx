@@ -27,9 +27,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Logo />
               Tachoklar
             </Link>
-            <nav className="flex items-center gap-1 text-sm">
-              <Link href="/forum" className="inline-flex min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground">Forum</Link>
-              <Link href="/vergleich" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground sm:inline-flex">Vergleich</Link>
+            <nav className="flex items-center gap-0.5 text-sm sm:gap-1">
+              <Link href="/forum" className="inline-flex min-h-11 items-center px-2 font-medium text-foreground/75 transition-colors hover:text-foreground sm:px-3">Forum</Link>
+              <Link href="/wert" className="inline-flex min-h-11 items-center px-2 font-medium text-foreground/75 transition-colors hover:text-foreground sm:px-3"><span className="sm:hidden">Wert</span><span className="hidden sm:inline">Auto-Wert</span></Link>
+              <Link href="/vergleich" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground lg:inline-flex">Vergleich</Link>
               <Link href="/finder" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground lg:inline-flex">Auto-Finder</Link>
               <Link href="/analysen" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground sm:inline-flex">Meine Analysen</Link>
               <Link href="/#pruefen" className="ml-1 inline-flex min-h-11 items-center whitespace-nowrap rounded-full bg-primary px-4 font-medium text-primary-foreground transition-[background-color,transform] hover:bg-[color-mix(in_oklch,var(--primary),black_14%)] active:translate-y-px"><span className="sm:hidden">Prüfen</span><span className="hidden sm:inline">Inserat prüfen</span></Link>
