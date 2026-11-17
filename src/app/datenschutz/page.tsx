@@ -15,7 +15,7 @@ export default function Datenschutz() {
         Ahmed Kilic, Rubihornstr. 24, 86163 Augsburg, Deutschland<br />
         E-Mail: <a className="text-brand underline underline-offset-4" href="mailto:musabkilic38@gmail.com">musabkilic38@gmail.com</a>
       </p>
-      <p>Tachoklar ist ein privates, nicht-kommerzielles und kostenloses Angebot. Es gibt kein Benutzerkonto, keine Werbung, keine Analyse- oder Tracking-Werkzeuge und keine Cookies.</p>
+      <p>Tachoklar ist ein privates, nicht-kommerzielles und kostenloses Angebot. Ein Benutzerkonto brauchst du nur für das Forum. Es gibt keine Werbung, keine Analyse- oder Tracking-Werkzeuge und nur ein technisch notwendiges Cookie für die Forum-Anmeldung.</p>
 
       <h2>2. Hosting und Server-Protokolle</h2>
       <p>
@@ -58,6 +58,21 @@ export default function Datenschutz() {
       </p>
       <h3>Offene Datenquellen</h3>
       <p>Für Typdaten und Rückrufe werden nur Fahrzeugmerkmale (Marke, Modell, Baujahr, Hubraum, Leistung) mit unserer Datenbank abgeglichen – keine Daten über dich.</p>
+
+      <h3>Forum und Benutzerkonto</h3>
+      <p>
+        Für ein Forumskonto speichern wir deine E-Mail-Adresse, deinen Benutzernamen, ein verschlüsseltes (gehashtes) Passwort sowie Zeitpunkte von
+        Registrierung und Anmeldung; dazu deine Beiträge und Meldungen. Rechtsgrundlage ist die Nutzung des Forums, die du mit der Registrierung anforderst
+        (Art. 6 Abs. 1 lit. b DSGVO). Die E-Mail-Adresse nutzen wir nur für die Bestätigung, das Zurücksetzen des Passworts und wichtige Hinweise zum Konto,
+        nicht für Werbung. Benutzername und Beiträge sind öffentlich sichtbar, deine E-Mail-Adresse nicht. Die Konten werden bei Supabase (Rechenzentrum
+        Frankfurt) verwaltet; dabei protokolliert Supabase zur Sicherheit auch IP-Adressen von Anmeldeversuchen für begrenzte Zeit.
+        Du kannst dein Konto jederzeit unter „Konto“ selbst löschen; Profil und alle deine Beiträge werden dann endgültig gelöscht.
+        Gemeldete Beiträge und die Meldungen dazu speichern wir, bis die Prüfung abgeschlossen ist.
+      </p>
+      <p>
+        Für die Anmeldung setzen wir ein technisch notwendiges Cookie (Sitzung), ohne das der Login nicht funktioniert (§ 25 Abs. 2 Nr. 2 TDDDG).
+        Es wird nur gesetzt, wenn du dich anmeldest, und enthält keine Tracking-Daten.
+      </p>
 
       <h2>4. Speicherung in deinem Browser</h2>
       <p>
