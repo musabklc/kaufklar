@@ -17,6 +17,7 @@ import { CompsInput } from "@/components/intake/comps-input";
 import { ProvenanceBadge } from "./provenance";
 import { CostsSection } from "./costs-section";
 import { UnlockCard } from "./unlock-card";
+import { DealerSection } from "./dealer-section";
 import { ReportForm } from "@/components/community/report-form";
 import { VehicleForm } from "@/components/intake/vehicle-form";
 import type { Vehicle } from "@/lib/types";
@@ -44,12 +45,14 @@ const NAV = [
 ] as const;
 
 // In der kostenlosen Fassung sichtbar; alles andere steckt im Premium-Bericht
-const FREE_SECTIONS = new Set(["uebersicht", "schwachstellen", "forum", "inserat", "rueckrufe", "kosten"]);
+const FREE_SECTIONS = new Set(["uebersicht", "haendler", "schwachstellen", "forum", "inserat", "rueckrufe", "kosten"]);
 
 export function Dashboard({ r }: { r: AnalysisResult }) {
   const v = r.vehicle;
   const locked = Boolean(r.locked);
-  const nav = locked ? [...NAV.filter(([id]) => FREE_SECTIONS.has(id)), ["premium", "Premium-Bericht"] as const] : NAV;
+  // Händler-Check nur, wenn es einen gibt (gewerblicher Kleinanzeigen-Verkäufer)
+  const all = r.dealer ? [NAV[0], ["haendler", "Händler"] as const, ...NAV.slice(1)] : [...NAV];
+  const nav = locked ? [...all.filter(([id]) => FREE_SECTIONS.has(id)), ["premium", "Premium-Bericht"] as const] : all;
   const name = [v.make, v.model, v.variant].filter(Boolean).join(" ");
   const facts = [
     v.firstRegistration && `EZ ${v.firstRegistration}`,
@@ -63,7 +66,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
 
   function updateComps(user: number[]) {
     const comps: Comp[] = [...r.price.comps.filter((c) => c.source !== "nutzer"), ...user.map((price) => ({ price, source: "nutzer" as const }))];
-    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, research: r.research, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked };
+    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, research: r.research, now: new Date(r.createdAt) }), forum: r.forum, dealer: r.dealer, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked };
     saveAnalysis(next); // Speicher-Hook rendert die Seite mit den neuen Werten
   }
 
@@ -117,6 +120,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
       <div className="mt-6 space-y-6">
         {!locked && <PriceCheck r={r} />}
         <Overview r={r} />
+        {r.dealer && <DealerSection d={r.dealer} />}
         <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} identification={r.identification} locked={locked} />
         {locked && <UnlockCard r={r} />}
         <ForumSection items={r.forum ?? []} vehicle={r.vehicle} />
@@ -491,7 +495,7 @@ function EditVehicle({ r }: { r: AnalysisResult }) {
             size="lg"
             className="mt-5 h-12 px-6 text-base"
             onClick={() => {
-              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, research: r.research, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked });
+              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, research: r.research, now: new Date(r.createdAt) }), forum: r.forum, dealer: r.dealer, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked });
               setOpen(false);
             }}
           >

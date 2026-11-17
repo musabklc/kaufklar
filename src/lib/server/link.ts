@@ -5,6 +5,7 @@ import { kaSearchUrl, pagePrice, pageSeller, parseKaSearch, plausibleListings, s
 import { parseYear } from "../analysis/knowledge";
 import type { Vehicle } from "../types";
 import type { WebListing } from "../ai/provider";
+import { parseKaDealer, rateDealer, type DealerCheck } from "../analysis/dealer";
 
 export { LinkError };
 
@@ -69,6 +70,21 @@ export async function checkListing(raw: string): Promise<{ gone: boolean; price:
   } catch {
     return null;
   }
+}
+
+/** Händler-Check: nur Kleinanzeigen-Inserate gewerblicher Verkäufer (Privatleute: null). */
+export async function checkDealer(raw: string): Promise<DealerCheck | null> {
+  let url: URL;
+  try {
+    url = validateListingUrl(raw);
+  } catch {
+    return null;
+  }
+  if (!url.hostname.endsWith("kleinanzeigen.de")) return null;
+  const { res } = await fetchPage(url);
+  if (!res?.ok) return null;
+  const info = parseKaDealer((await res.text()).slice(0, MAX_BYTES));
+  return info ? rateDealer(info) : null;
 }
 
 /** Lädt eine Seite; Redirects nur innerhalb der erlaubten Portale (SSRF-Schutz). */

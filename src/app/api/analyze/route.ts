@@ -10,7 +10,7 @@ import { fail, json, rateLimited, readImages } from "@/lib/server/http";
 import { logEvent } from "@/lib/server/usage";
 import { storeAnalysis, visible } from "@/lib/server/analyses";
 import { currentUser } from "@/lib/supabase/server";
-import { searchKleinanzeigen, verifyListings } from "@/lib/server/link";
+import { checkDealer, searchKleinanzeigen, verifyListings } from "@/lib/server/link";
 import { bodyOf, trimOf, vehicleText } from "@/lib/analysis/market";
 import { findComparables, modelMedian, recordObservations } from "@/lib/server/price-index";
 import { eeaLookup } from "@/lib/server/eea";
@@ -97,13 +97,15 @@ export async function POST(req: Request) {
     })
     .catch((e) => (console.error("marktcheck failed", e), [] as WebListing[]));
 
-  const [ai, web, indexComps, recalls, community, forum] = await Promise.all([
+  const [ai, web, indexComps, recalls, community, forum, dealer] = await Promise.all([
     auditP,
     webP,
     findComparables(vehicle),
     recallsFor(vehicle, eea?.typeApprovals ?? []),
     communityIssuesFor(vehicle),
     forumInsightsFor(vehicle).catch(() => []),
+    // Händler-Check nur bei gewerblichen Kleinanzeigen-Verkäufern (Privatbewertungen sagen wenig aus)
+    vehicle.listingUrl && vehicle.sellerType !== "privat" ? checkDealer(vehicle.listingUrl).catch(() => null) : Promise.resolve(null),
   ]);
 
   const comps: Comp[] = [
@@ -125,7 +127,7 @@ export async function POST(req: Request) {
     }),
   );
 
-  const result = { ...buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community, research }), forum };
+  const result = { ...buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community, research }), forum, dealer };
   // Nur gesiegelte, unverändert ausgelesene Inserate fließen in den Index (Schutz vor erfundenen Preisen).
   await Promise.all([recordObservations(vehicle, sealed, web), currentUser().then((u) => storeAnalysis(result, u?.id ?? null))]);
   // "ok" = mit KI-Teil; ohne KI ist die Analyse nur eingeschränkt

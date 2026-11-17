@@ -304,6 +304,8 @@ export type AnalysisResult = {
   research?: ResearchEntry | null;
   /** Von Kunden gemeldete, freigegebene Probleme (Rohdaten für Neuberechnung im Browser). */
   community: import("./analysis/community").CommunityIssue[];
+  /** Händler-Check (nur gewerbliche Kleinanzeigen-Verkäufer); fehlt sonst. */
+  dealer?: import("./analysis/dealer").DealerCheck | null;
   /** Erfahrungen aus dem Forum (KI-ausgelesen, mit Link zum Beitrag); fehlt bei älteren gespeicherten Analysen. */
   forum?: import("./analysis/forum-insights").ForumInsight[];
   /** Ergebnis der Foto-Besichtigung vor Ort (nur im Browser gespeichert, Fotos nicht). */
