@@ -4,6 +4,7 @@ import type { WebListing } from "@/lib/ai/provider";
 import { buildAnalysis } from "@/lib/analysis/engine";
 import { matchKnowledge } from "@/lib/analysis/knowledge";
 import { fail, json, rateLimited, readImages } from "@/lib/server/http";
+import { logEvent } from "@/lib/server/usage";
 import { searchKleinanzeigen, verifyListings } from "@/lib/server/link";
 import { bodyOf, trimOf, vehicleText } from "@/lib/analysis/market";
 import { findComparables, modelMedian, recordObservations } from "@/lib/server/price-index";
@@ -21,7 +22,8 @@ const CompsSchema = z.array(z.number()).max(20);
 const OriginSchema = z.enum(["link", "bilder", "manuell"]).catch("manuell");
 
 export async function POST(req: Request) {
-  if (rateLimited(req)) return fail("Zu viele Anfragen. Bitte kurz warten.", 429);
+  const started = Date.now();
+  if (await rateLimited(req)) return fail("Zu viele Anfragen. Bitte etwas später erneut versuchen.", 429);
   let vehicle, userComps, images, origin, seal;
   try {
     const form = await req.formData();
@@ -110,5 +112,7 @@ export async function POST(req: Request) {
   const result = { ...buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community }), forum };
   // Nur gesiegelte, unverändert ausgelesene Inserate fließen in den Index (Schutz vor erfundenen Preisen).
   await recordObservations(vehicle, sealed, web);
+  // "ok" = mit KI-Teil; ohne KI ist die Analyse nur eingeschränkt
+  await logEvent({ kind: "analyze", op: origin, ok: ai !== null, ms: Date.now() - started, error: aiNote ?? undefined });
   return json(result);
 }

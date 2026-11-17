@@ -5,6 +5,7 @@ import { AiAuditSchema, ExtractionSchema, FinderSchema, ForumInsightsSchema, Ins
 import { AiError, webSearchEnabled, type AiProvider, type ForumPostInput, type ImageInput } from "./provider";
 import { AUDIT_SYSTEM, EXTRACT_SYSTEM, FINDER_SYSTEM, FORUM_SYSTEM, INSPECT_SYSTEM, MODERATE_SYSTEM, SERVICEBOOK_SYSTEM } from "./prompts";
 import { parseLenient, toGeminiSchema } from "./schema";
+import { aiBudgetExceeded, logEvent } from "../server/usage";
 
 /**
  * Modellkette: Jedes Gratis-Modell hat ein eigenes Tageskontingent (gemini-3.8-flash nur ca. 20 Anfragen/Tag).
@@ -26,6 +27,8 @@ const exhaustedUntil = new Map<string, number>();
 const statusOf = (e: unknown) => (e as { status?: number }).status ?? (e as { statusCode?: number }).statusCode;
 
 
+const OPS = new Map([[EXTRACT_SYSTEM, "extract"], [AUDIT_SYSTEM, "audit"], [MODERATE_SYSTEM, "moderate"], [FORUM_SYSTEM, "forum"], [FINDER_SYSTEM, "finder"], [INSPECT_SYSTEM, "inspect"], [SERVICEBOOK_SYSTEM, "servicebook"]]);
+
 type Part = { type: "text"; text: string } | { type: "image"; data: string; mime_type: string };
 
 export class GeminiProvider implements AiProvider {
@@ -33,6 +36,7 @@ export class GeminiProvider implements AiProvider {
   private client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
   private async json<S extends z.ZodType>(schema: S, system: string, input: Part[], search = false): Promise<z.infer<S>> {
+    if (await aiBudgetExceeded()) throw new AiError("Das Tageslimit für KI-Prüfungen ist erreicht. Bitte morgen erneut versuchen.");
     const now = Date.now();
     const deadline = now + (search ? SEARCH_TOTAL_MS : TOTAL_MS);
     const candidates = MODELS.filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
@@ -74,6 +78,8 @@ export class GeminiProvider implements AiProvider {
 
   private async once<S extends z.ZodType>(model: string, schema: S, system: string, input: Part[], search: boolean, timeoutMs: number): Promise<z.infer<S>> {
     {
+      const started = Date.now();
+      const op = OPS.get(system);
       const it = await this.client.interactions.create({
         model,
         store: false, // nichts serverseitig bei Google vorhalten
@@ -82,7 +88,13 @@ export class GeminiProvider implements AiProvider {
         response_format: { type: "text", mime_type: "application/json", schema: toGeminiSchema(schema) },
         ...(model.startsWith("gemini") ? { generation_config: { thinking_level: "low" } } : {}),
         ...(search ? { tools: [{ type: "google_search" }] } : {}),
-      }, { timeout_ms: timeoutMs, retries: { strategy: "none" } }); // keine SDK-Wiederholungen: bei 429 sofort nächstes Modell
+      }, { timeout_ms: timeoutMs, retries: { strategy: "none" } }) // keine SDK-Wiederholungen: bei 429 sofort nächstes Modell
+        .catch(async (e) => {
+          await logEvent({ kind: "ai", op, model, ok: false, ms: Date.now() - started, error: `${statusOf(e) ?? "netz"}: ${(e as Error).message}` });
+          throw e;
+        });
+      const u = it.usage;
+      await logEvent({ kind: "ai", op, model, ok: it.status === undefined || it.status === "completed", ms: Date.now() - started, inputTokens: u?.total_input_tokens, outputTokens: (u?.total_output_tokens ?? 0) + (u?.total_thought_tokens ?? 0) || undefined });
       if (it.status && it.status !== "completed") throw new AiError("Die KI-Antwort war unvollständig. Bitte erneut versuchen.");
       let data: unknown;
       try {

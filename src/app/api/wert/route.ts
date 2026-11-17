@@ -20,7 +20,7 @@ export type WertResult = { valuation: Valuation | null; comps: { price: number; 
 
 /** "Was ist mein Auto wert?" – live die gleichen Vergleichsangebote wie bei der Kaufanalyse, umgekehrt gelesen. */
 export async function POST(req: Request) {
-  if (rateLimited(req, 5)) return fail("Zu viele Anfragen. Bitte kurz warten.", 429);
+  if (await rateLimited(req, 5)) return fail("Zu viele Anfragen. Bitte etwas später erneut versuchen.", 429);
   const p = Input.safeParse(await req.json().catch(() => null));
   if (!p.success) return fail("Bitte Marke, Modell, Baujahr und Kilometerstand angeben.");
   const v: Vehicle = {

@@ -35,7 +35,7 @@ export type FinderResult = {
 
 /** Auto-Finder: KI schlägt Modelle vor, Tachoklar ergänzt echte Marktpreise, bekannte Schwachstellen und Suchlink. */
 export async function POST(req: Request) {
-  if (rateLimited(req, 5)) return fail("Zu viele Anfragen. Bitte kurz warten.", 429);
+  if (await rateLimited(req, 5)) return fail("Zu viele Anfragen. Bitte etwas später erneut versuchen.", 429);
   const parsed = FinderInputSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return fail("Bitte alle Angaben ausfüllen.");
   const ai = await getProvider();

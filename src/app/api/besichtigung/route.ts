@@ -13,7 +13,7 @@ const MAX_PHOTOS = 6; // Vercel nimmt höchstens 4,5 MB pro Anfrage; der Browser
  * Die Fotos werden nur an die KI geschickt, nicht gespeichert.
  */
 export async function POST(req: Request) {
-  if (rateLimited(req, 6)) return fail("Zu viele Anfragen. Bitte kurz warten.", 429);
+  if (await rateLimited(req, 6)) return fail("Zu viele Anfragen. Bitte etwas später erneut versuchen.", 429);
   const ai = await getProvider();
   if (!ai) return fail("Die KI-Prüfung ist auf diesem Server nicht aktiv.", 503);
   let form, vehicle, images, labels, mode;

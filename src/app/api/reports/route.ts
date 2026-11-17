@@ -23,7 +23,7 @@ const ReportSchema = z.object({
 const MAX_PER_DAY = 5;
 
 export async function POST(req: Request) {
-  if (rateLimited(req, 5)) return fail("Zu viele Meldungen. Bitte kurz warten.", 429);
+  if (await rateLimited(req, 5)) return fail("Zu viele Meldungen. Bitte kurz warten.", 429);
   if (!communityEnabled()) return fail("Meldungen sind auf diesem Server nicht aktiviert.", 503);
 
   const body = await req.json().catch(() => null);
