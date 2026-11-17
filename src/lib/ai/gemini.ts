@@ -2,7 +2,7 @@ import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { AiAuditSchema, ExtractionSchema, ModerationSchema, type ReportInput, type Vehicle } from "../types";
-import { AiError, type AiProvider, type ImageInput, type WebListing } from "./provider";
+import { AiError, webSearchEnabled, type AiProvider, type ImageInput, type WebListing } from "./provider";
 import { AUDIT_SYSTEM, EXTRACT_SYSTEM, MODERATE_SYSTEM, PRICE_SYSTEM } from "./prompts";
 import { parseLenient, toGeminiSchema } from "./schema";
 import { plausibleListings } from "../analysis/market";
@@ -19,6 +19,9 @@ const MODEL = MODELS[0];
 // Kunden warten höchstens so lange auf die KI; danach läuft die Analyse ohne KI-Teil weiter.
 const PER_MODEL_MS = 40_000;
 const TOTAL_MS = 75_000;
+// Mit Google-Recherche braucht die KI länger (mehrere Suchen).
+const SEARCH_PER_MODEL_MS = 70_000;
+const SEARCH_TOTAL_MS = 110_000;
 // shortcut: Merkt sich ausgeschöpfte Modelle nur im Speicher dieser Server-Instanz bis Mitternacht (US-Pazifik, wann Google zurücksetzt) – bei mehreren Instanzen in Redis ablegen.
 const exhaustedUntil = new Map<string, number>();
 const statusOf = (e: unknown) => (e as { status?: number }).status ?? (e as { statusCode?: number }).statusCode;
@@ -37,14 +40,14 @@ export class GeminiProvider implements AiProvider {
 
   private async json<S extends z.ZodType>(schema: S, system: string, input: Part[], search = false): Promise<z.infer<S>> {
     const now = Date.now();
-    const deadline = now + TOTAL_MS;
+    const deadline = now + (search ? SEARCH_TOTAL_MS : TOTAL_MS);
     const candidates = MODELS.filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
     let last: unknown = new AiError("Das KI-Kontingent ist gerade ausgeschöpft. Bitte später erneut versuchen.");
     for (const model of candidates) {
       const left = deadline - Date.now();
       if (left < 5_000) break;
       try {
-        return await this.once(model, schema, system, input, search, Math.min(PER_MODEL_MS, left));
+        return await this.once(model, schema, system, input, search, Math.min(search ? SEARCH_PER_MODEL_MS : PER_MODEL_MS, left));
       } catch (e) {
         const st = statusOf(e);
         if (!st && !(e instanceof AiError)) {
@@ -120,7 +123,7 @@ export class GeminiProvider implements AiProvider {
       { type: "text", text: `<fahrzeugdaten>\n${JSON.stringify(vehicle, null, 2)}\n</fahrzeugdaten>` },
       { type: "text", text: `<wissensdatenbank>\n${knowledgeSummary || "Keine Treffer in der Datenbank."}\n</wissensdatenbank>` },
       ...this.images(images),
-    ]);
+    ], webSearchEnabled()); // mit Google-Recherche zu Schwachstellen dieses Modells
   }
 
   moderate(r: ReportInput) {
