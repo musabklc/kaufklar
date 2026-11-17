@@ -1,4 +1,7 @@
+import { Suspense } from "react";
+import { connection } from "next/server";
 import Link from "next/link";
+import { listGuides } from "@/lib/server/ratgeber";
 import { KNOWLEDGE } from "@/lib/analysis/knowledge";
 
 export const metadata = {
@@ -31,6 +34,40 @@ export default function SchwachstellenPage() {
           </ul>
         </section>
       ))}
+      <Suspense fallback={null}>
+        <Researched />
+      </Suspense>
     </div>
+  );
+}
+
+/** Ratgeber aus der Recherche-Datenbank, nach Marke gruppiert (wächst mit jedem neu analysierten Fahrzeugtyp). */
+async function Researched() {
+  await connection();
+  const guides = await listGuides();
+  if (!guides.length) return null;
+  const makes = [...new Set(guides.map((g) => g.label.split(" ")[0]))].sort((a, b) => a.localeCompare(b, "de"));
+  return (
+    <section className="mt-16">
+      <h2 className="text-2xl font-semibold">Ratgeber nach Fahrzeug</h2>
+      <p className="mt-2 max-w-2xl text-muted-foreground">Typische Schwachstellen einzelner Modelle und Baujahre, von der Tachoklar-KI aus öffentlichen Quellen recherchiert, mit Quellenangaben.</p>
+      {makes.map((m) => (
+        <div key={m} className="mt-8">
+          <h3 className="text-lg font-semibold">{m}</h3>
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {guides
+              .filter((g) => g.label.split(" ")[0] === m)
+              .map((g) => (
+                <li key={g.slug}>
+                  <Link href={`/ratgeber/${g.slug}`} className="flex h-full flex-col rounded-3xl bg-card p-5 transition-transform hover:-translate-y-0.5">
+                    <span className="font-semibold">{g.label}</span>
+                    <span className="mt-2 text-sm text-muted-foreground">{g.weakPoints.slice(0, 3).map((w) => w.title).join(" · ")}</span>
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   );
 }

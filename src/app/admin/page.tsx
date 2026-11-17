@@ -66,7 +66,7 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
   const db = serviceDb()!;
   const [{ data, error }, { data: research, count: researchCount }] = await Promise.all([
     db.rpc("admin_stats", { p_since: since(range).toISOString() }),
-    db.from("model_research").select("key, label, status, identified_as, weak_points, sources, researched_at, started_at", { count: "exact" }).order("started_at", { ascending: false }).limit(40),
+    db.from("model_research").select("key, slug, label, status, identified_as, weak_points, sources, researched_at, started_at", { count: "exact" }).order("started_at", { ascending: false }).limit(40),
   ]);
   if (error || !data) return <p className="rounded-3xl bg-card p-6">Kennzahlen konnten nicht geladen werden.</p>;
   const s = data as Stats;
@@ -169,7 +169,12 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/admin">["
               {research.map((r) => (
                 <li key={r.key} className="flex flex-wrap items-start justify-between gap-3 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium">{r.identified_as ?? r.label}</p>
+                    <p className="font-medium">
+                      {r.identified_as ?? r.label}
+                      {(r.weak_points as unknown[] | null)?.length && (r.weak_points as unknown[]).length >= 3 && (r.sources as unknown[]).length >= 2 ? (
+                        <Link href={`/ratgeber/${r.slug}`} className="ml-2 text-sm font-normal text-brand">Ratgeber-Seite →</Link>
+                      ) : null}
+                    </p>
                     <p className="text-muted-foreground">
                       {r.status === "fertig" || r.weak_points ? `${(r.weak_points as unknown[] | null)?.length ?? 0} Schwachstellen · ${(r.sources as unknown[]).length} Quellen · ${r.researched_at ? new Date(r.researched_at).toLocaleDateString("de-DE") : ""}` : r.status === "laeuft" ? "wird gerade recherchiert …" : "fehlgeschlagen (nach 1 Stunde neuer Versuch)"}
                       {r.status !== "fertig" && r.weak_points ? ` · Erneuerung ${r.status === "laeuft" ? "läuft" : "fehlgeschlagen"}` : ""}
