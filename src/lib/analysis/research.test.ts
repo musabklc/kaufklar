@@ -29,3 +29,12 @@ test("Recherche-Schlüssel: ohne Motor oder Baujahr keine Recherche", () => {
   assert.equal(researchKey(v({ firstRegistration: null })), null);
   assert.equal(researchKey(v({ fuel: null })), null);
 });
+
+test("Vorbefüll-Liste: jeder Eintrag ergibt einen eigenen Recherche-Schlüssel", async () => {
+  const { SEED_TYPES } = await import("./seed-types.ts");
+  const keys = SEED_TYPES.map((t) => researchKey(t)?.key);
+  assert.ok(SEED_TYPES.length >= 150, `nur ${SEED_TYPES.length}`);
+  assert.ok(keys.every(Boolean), "Eintrag ohne Schlüssel");
+  const dup = keys.filter((k, i) => keys.indexOf(k) !== i);
+  assert.deepEqual(dup, []);
+});
