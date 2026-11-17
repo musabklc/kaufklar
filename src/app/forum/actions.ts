@@ -52,7 +52,11 @@ export async function deletePost(f: FormData) {
   const id = Number(str(f, "post"));
   const threadId = Number(str(f, "thread"));
   const sb = await supabaseUser();
+  const { data: thread } = await sb.from("forum_threads").select("board_id").eq("id", threadId).maybeSingle();
   if (Number.isInteger(id)) await sb.from("forum_posts").delete().eq("id", id);
+  // Letzter Beitrag weg → Thema wurde per Trigger mitgelöscht, zurück ins Unterforum statt 404
+  const { data: still } = await sb.from("forum_threads").select("id").eq("id", threadId).maybeSingle();
+  if (!still && thread) redirect(`/forum/${thread.board_id}`);
   revalidatePath(`/forum/thema/${threadId}`);
 }
 
