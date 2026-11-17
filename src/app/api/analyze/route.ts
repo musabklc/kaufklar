@@ -5,6 +5,7 @@ import { buildAnalysis } from "@/lib/analysis/engine";
 import { matchKnowledge } from "@/lib/analysis/knowledge";
 import { fail, json, rateLimited, readImages } from "@/lib/server/http";
 import { searchKleinanzeigen, verifyListings } from "@/lib/server/link";
+import { bodyOf, trimOf, vehicleText } from "@/lib/analysis/market";
 import { findComparables, modelMedian, recordObservations } from "@/lib/server/price-index";
 import { eeaLookup } from "@/lib/server/eea";
 import { recallsFor } from "@/lib/server/recalls";
@@ -44,6 +45,10 @@ export async function POST(req: Request) {
     if (filled.filled.length)
       dataNotes.push(`Aus den EU-Typdaten ergänzt: ${filled.filled.join(", ")} (${eea.matches} passende Typeinträge, z. B. „${eea.names[0]}“). Quelle: Europäische Umweltagentur, CC BY 4.0.`);
   }
+
+  const kindText = vehicleText(vehicle);
+  const [body, trim] = [bodyOf(kindText), trimOf(kindText)];
+  if (body || trim) dataNotes.push(`Marktcheck: verglichen ${[body && `nur mit ${body}-Angeboten`, trim && `bevorzugt mit ${trim} (sobald genug Angebote da sind)`].filter(Boolean).join(", ")}.`);
 
   const provider = await getProvider();
   let aiNote: string | null = provider ? null : "KI-Prüfung nicht aktiv (kein API-Schlüssel konfiguriert). Analyse basiert auf Wissensdatenbank und Regelprüfung.";

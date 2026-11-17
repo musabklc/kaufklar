@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { canonicalUrl, kaQuery, kaSearchUrl, pagePrice, pageSeller, parseKaSearch, plausibleListings, priceVerdict } from "./market.ts";
+import { bodyOf, canonicalUrl, kaQuery, kaSearchUrl, pagePrice, sameKind, trimOf, pageSeller, parseKaSearch, plausibleListings, priceVerdict } from "./market.ts";
 
 const l = (priceEur: number, year: number | null, mileageKm: number | null, url = "https://www.mobile.de/x") => ({ title: "CLS 500", priceEur, year, mileageKm, url });
 
@@ -69,4 +69,20 @@ test("Kleinanzeigen-Such-URL mit Baujahr- und km-Filter", () => {
     "https://www.kleinanzeigen.de/s-autos/audi-a5-tdi/k0c216+autos.ez_i:2020%2C2024+autos.km_i:120000%2C280000",
   );
   assert.equal(kaSearchUrl({ make: null, model: null, variant: null, firstRegistration: null, mileageKm: null }), null);
+});
+
+test("Karosserie und Ausstattungslinie trennen", () => {
+  assert.equal(bodyOf("Mercedes GLC 300 4Matic Coupé AMG Line"), "Coupé");
+  assert.equal(bodyOf("BMW 320d Touring"), "Kombi");
+  assert.equal(bodyOf("BMW 320d Gran Turismo M Sport"), "Gran Turismo");
+  assert.equal(bodyOf("Kia Ceed GT Line"), null);
+  assert.equal(trimOf("BMW 320d M Sportpaket"), "M Sport");
+  assert.equal(trimOf("Audi A5 Sportback S line"), "S line");
+  assert.equal(trimOf("Premium Sportsitze, Design line"), null);
+  const offers = ["GLC 220d Coupé", "GLC 220d 4Matic", "GLC 250 AMG Line", "GLC 300 Coupe AMG Line", "GLC 220d", "GLC 200"];
+  assert.deepEqual(sameKind(offers, "GLC 220d SUV", (x) => x).list, ["GLC 220d 4Matic", "GLC 250 AMG Line", "GLC 220d", "GLC 200"]);
+  assert.deepEqual(sameKind(offers, "GLC Coupé", (x) => x).list, ["GLC 220d Coupé", "GLC 300 Coupe AMG Line"]);
+  const m = ["320d M Sport", "320d M-Paket", "320d m sport", "320d M Sportpaket", "320d Advantage"];
+  assert.equal(sameKind(m, "320d M Sportpaket", (x) => x).list.length, 4);
+  assert.equal(sameKind(m.slice(3), "320d M Sportpaket", (x) => x).list.length, 2);
 });

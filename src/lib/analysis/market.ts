@@ -81,7 +81,9 @@ export function kaQuery(v: Pick<Vehicle, "make" | "model" | "variant">, eng = tr
   const tokens = (v.variant ?? "").toLowerCase().split(/[\s/]+/).filter(Boolean);
   const engine = eng ? [tokens.find((t) => NUMERIC.test(t)), tokens.find((t) => ENGINE.test(t))].filter(Boolean) as string[] : [];
   const model = (v.model ?? "").toLowerCase();
-  const words = [make, ...(engine.length && SERIES.test(model) ? [] : model.split(/\s+/)), ...engine];
+  // Coupé/Cabrio mitsuchen, sonst kommen fast nur die häufigeren Limousinen/SUVs
+  const body = { Coupé: "coupe", Cabrio: "cabrio" }[bodyOf(v.variant ?? "") ?? ""] ?? "";
+  const words = [make, ...(engine.length && SERIES.test(model) ? [] : model.split(/\s+/)), ...engine, body];
   return [...new Set(words.filter(Boolean))].map((w) => encodeURIComponent(w.replace(/\s+/g, "-"))).join("-");
 }
 
@@ -115,4 +117,45 @@ export function kaSearchUrl(v: Pick<Vehicle, "make" | "model" | "variant" | "fir
     v.mileageKm ? `autos.km_i:${Math.round(v.mileageKm * 0.6)}%2C${Math.round(v.mileageKm * 1.4)}` : "",
   ].filter(Boolean);
   return `https://www.kleinanzeigen.de/s-autos/${q}/k0c216${f.map((x) => `+${x}`).join("")}`;
+}
+
+// ---------- Karosserie und Ausstattungslinie (verändern den Preis deutlich) ----------
+
+const BODIES: [string, RegExp][] = [
+  ["Coupé", /coup[eé]/i],
+  ["Cabrio", /cabrio|roadster|spyder|spider/i],
+  ["Gran Turismo", /gran turismo|gt(?![\s-]?line)/i],
+  ["Kombi", /touring|kombi|avant\b|variant\b|t-modell|sports ?tourer|estate|combi\b/i],
+];
+const TRIMS: [string, RegExp][] = [
+  ["M Sport", /\bm[\s-]?sport|\bm-paket/i],
+  ["AMG Line", /\bamg[\s-]?(line|paket|sport)/i],
+  ["S line", /\bs[\s-]?line/i],
+  ["R-Line", /\br[\s-]?line/i],
+  ["ST-Line", /\bst[\s-]?line/i],
+  ["GT Line", /\bgt[\s-]?line/i],
+  ["N Line", /\bn[\s-]?line/i],
+  ["FR", /\bfr\b/i],
+];
+export const bodyOf = (t: string) => BODIES.find(([, re]) => re.test(t))?.[0] ?? null;
+export const trimOf = (t: string) => TRIMS.find(([, re]) => re.test(t))?.[0] ?? null;
+
+/** Text, aus dem Karosserie und Ausstattungslinie des gesuchten Autos gelesen werden. */
+export const vehicleText = (v: Pick<Vehicle, "variant" | "description" | "equipment">) => [v.variant, v.description, ...(v.equipment ?? [])].filter(Boolean).join(" ");
+
+/**
+ * Nur Angebote derselben Art: gleiche Karosserie (ein GLC Coupé nicht mit dem SUV vergleichen; ohne Angabe keine Coupés/Cabrios),
+ * und dieselbe Ausstattungslinie, sobald mindestens 4 Angebote sie haben.
+ */
+export function sameKind<T>(list: T[], target: string, titleOf: (x: T) => string): { list: T[]; note: string | null } {
+  const body = bodyOf(target);
+  const trim = trimOf(target);
+  let out = list.filter((x) => {
+    const b = bodyOf(titleOf(x));
+    return body ? b === body : b !== "Coupé" && b !== "Cabrio" && b !== "Gran Turismo";
+  });
+  const withTrim = trim ? out.filter((x) => trimOf(titleOf(x)) === trim) : [];
+  if (withTrim.length >= 4) out = withTrim;
+  const parts = [body && `nur ${body}-Angebote`, withTrim.length >= 4 && `nur mit ${trim}`].filter(Boolean);
+  return { list: out, note: parts.length ? `Marktcheck: ${parts.join(", ")}.` : null };
 }

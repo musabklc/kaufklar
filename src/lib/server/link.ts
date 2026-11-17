@@ -1,7 +1,7 @@
 import "server-only";
 
 import { LinkError, validateListingUrl } from "../guards";
-import { kaSearchUrl, pagePrice, pageSeller, parseKaSearch, plausibleListings } from "../analysis/market";
+import { kaSearchUrl, pagePrice, pageSeller, parseKaSearch, plausibleListings, sameKind, vehicleText } from "../analysis/market";
 import { parseYear } from "../analysis/knowledge";
 import type { Vehicle } from "../types";
 import type { WebListing } from "../ai/provider";
@@ -106,6 +106,8 @@ export async function searchKleinanzeigen(v: Vehicle): Promise<WebListing[]> {
   };
   let found = await pull(kaSearchUrl(v));
   if (found.length < 8) found = [...found, ...(await pull(kaSearchUrl(v, false)))];
+  // Gleiche Karosserie und, wenn genug da, gleiche Ausstattungslinie (M Sport, AMG Line, S line …)
+  found = sameKind(found, vehicleText(v), (l) => l.title).list;
   const year = parseYear(v.firstRegistration);
   const dist = (l: WebListing) => (year && l.year ? Math.abs(l.year - year) : 1) + (v.mileageKm && l.mileageKm ? Math.abs(l.mileageKm - v.mileageKm) / 25000 : 1);
   return found.sort((a, b) => dist(a) - dist(b));

@@ -1,4 +1,5 @@
 import "server-only";
+import { sameKind, vehicleText } from "../analysis/market";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { parseYear } from "../analysis/knowledge";
 import type { WebListing } from "../ai/provider";
@@ -27,7 +28,7 @@ export function withoutOutliers(prices: number[]): number[] {
   return s.filter((x) => x >= q(0.25) - 1.5 * iqr && x <= q(0.75) + 1.5 * iqr);
 }
 
-type Row = { price_eur: number; source_url: string | null; year: number | null; mileage_km: number | null; seller: "privat" | "gewerblich" | null; created_at: string };
+type Row = { price_eur: number; source_url: string | null; year: number | null; mileage_km: number | null; seller: "privat" | "gewerblich" | null; created_at: string; variant: string | null };
 
 /** Vergleichbare Angebote: gleiche Marke/Modell/Kraftstoff, Baujahr ±2, km ±40 %, letzte 18 Monate. */
 export async function findComparables(v: Vehicle): Promise<Comp[]> {
@@ -36,7 +37,7 @@ export async function findComparables(v: Vehicle): Promise<Comp[]> {
   const year = parseYear(v.firstRegistration);
   let q = c
     .from("price_observations")
-    .select("price_eur, source_url, year, mileage_km, seller, created_at")
+    .select("price_eur, source_url, year, mileage_km, seller, created_at, variant")
     .eq("make", norm(v.make))
     .eq("model", norm(v.model))
     .gte("created_at", new Date(Date.now() - 548 * 864e5).toISOString())
@@ -51,8 +52,9 @@ export async function findComparables(v: Vehicle): Promise<Comp[]> {
   }
   // Eigenes Inserat nie als Vergleich – auch nicht, wenn es früher per Link und jetzt per Screenshot kam (gleicher Preis + km).
   const rows = (data as Row[]).filter((r) => r.source_url !== ownKey(v) && !(r.price_eur === v.priceEur && r.mileage_km === v.mileageKm));
-  const keep = new Set(withoutOutliers(rows.map((r) => r.price_eur)));
-  return rows
+  const same = sameKind(rows, vehicleText(v), (r) => r.variant ?? "").list;
+  const keep = new Set(withoutOutliers(same.map((r) => r.price_eur)));
+  return same
     .filter((r) => keep.has(r.price_eur))
     .map((r) => ({ price: r.price_eur, source: "index" as const, url: r.source_url?.startsWith("https://") ? r.source_url : undefined, label: [r.year, r.mileage_km && `${r.mileage_km.toLocaleString("de-DE")} km`, `zuletzt gesehen ${new Date(r.created_at).toLocaleDateString("de-DE")}`].filter(Boolean).join(" · "), seller: r.seller }));
 }
