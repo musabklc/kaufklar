@@ -60,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </nav>
             </div>
             <p className="mt-10 text-xs text-background/50">
-              Fotos: Trop86 (CC0), Kickaffe/Mario von Berg (CC BY-SA 4.0), Charles from Port Chester (CC0) – Wikimedia Commons.
+              Fotos: OSX (gemeinfrei), Kickaffe/Mario von Berg (<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" className="underline">CC BY-SA 4.0</a>) – Wikimedia Commons.
             </p>
           </div>
         </footer>

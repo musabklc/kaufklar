@@ -201,19 +201,19 @@ function List({ title, items }: { title: string; items: { id: string; name: stri
 /** Echtes Auto, echtes Ergebnis: die Tachoklar-Analyse eines CLS 500 (Nov. 2026) als schwebende Karte über dem Foto. */
 function HeroCar() {
   return (
-    <div className="animate-rise relative pb-28 [animation-delay:200ms] sm:pb-20">
+    <div className="animate-rise relative [animation-delay:200ms] sm:pb-20">
       <div className="overflow-hidden rounded-3xl">
         <Image
-          src="/img/cls-hero-1560.webp"
-          alt="Schwarzer Mercedes CLS 500 auf der Straße"
+          src="/img/cls-c219-1560.webp"
+          alt="Silberner Mercedes-Benz CLS (C219) am Straßenrand"
           width={1560}
-          height={780}
+          height={1043}
           priority
           sizes="(max-width: 1023px) 100vw, 680px"
-          className="aspect-[4/3] w-full object-cover"
+          className="aspect-[3/2] w-full object-cover"
         />
       </div>
-      <figure data-ui className="absolute bottom-0 left-4 right-4 rounded-2xl bg-card p-5 shadow-[0_24px_60px_-20px_rgba(11,12,14,0.35)] sm:left-auto sm:right-6 sm:w-[22rem]">
+      <figure data-ui className="relative mx-4 -mt-8 rounded-2xl sm:absolute sm:bottom-0 sm:mx-0 sm:mt-0 bg-card p-5 shadow-[0_24px_60px_-20px_rgba(11,12,14,0.35)] sm:right-auto sm:left-6 sm:w-[22rem]">
         <p className="text-sm text-muted-foreground">Mercedes CLS 500 · 2008 · 168.000 km</p>
         <div className="mt-3 flex items-center gap-4">
           <div className="w-28 shrink-0">
