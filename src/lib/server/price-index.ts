@@ -27,7 +27,7 @@ export function withoutOutliers(prices: number[]): number[] {
   return s.filter((x) => x >= q(0.25) - 1.5 * iqr && x <= q(0.75) + 1.5 * iqr);
 }
 
-type Row = { price_eur: number; source_url: string | null; year: number | null; mileage_km: number | null };
+type Row = { price_eur: number; source_url: string | null; year: number | null; mileage_km: number | null; seller: "privat" | "gewerblich" | null };
 
 /** Vergleichbare Angebote: gleiche Marke/Modell/Kraftstoff, Baujahr ±2, km ±40 %, letzte 18 Monate. */
 export async function findComparables(v: Vehicle): Promise<Comp[]> {
@@ -36,7 +36,7 @@ export async function findComparables(v: Vehicle): Promise<Comp[]> {
   const year = parseYear(v.firstRegistration);
   let q = c
     .from("price_observations")
-    .select("price_eur, source_url, year, mileage_km")
+    .select("price_eur, source_url, year, mileage_km, seller")
     .eq("make", norm(v.make))
     .eq("model", norm(v.model))
     .gte("created_at", new Date(Date.now() - 548 * 864e5).toISOString())
@@ -54,7 +54,7 @@ export async function findComparables(v: Vehicle): Promise<Comp[]> {
   const keep = new Set(withoutOutliers(rows.map((r) => r.price_eur)));
   return rows
     .filter((r) => keep.has(r.price_eur))
-    .map((r) => ({ price: r.price_eur, source: "index" as const, url: r.source_url?.startsWith("https://") ? r.source_url : undefined, label: [r.year, r.mileage_km && `${r.mileage_km.toLocaleString("de-DE")} km`].filter(Boolean).join(" · ") }));
+    .map((r) => ({ price: r.price_eur, source: "index" as const, url: r.source_url?.startsWith("https://") ? r.source_url : undefined, label: [r.year, r.mileage_km && `${r.mileage_km.toLocaleString("de-DE")} km`].filter(Boolean).join(" · "), seller: r.seller }));
 }
 
 export async function modelMedian(make: string, model: string, years: string): Promise<{ median: number | null; count: number }> {
@@ -75,9 +75,9 @@ export async function recordObservations(v: Vehicle, listingPrice: boolean, web:
   const base = { make: norm(v.make), model: norm(v.model), fuel: v.fuel, power_kw: v.powerKw };
   const rows = [
     ...(listingPrice && v.priceEur
-      ? [{ ...base, variant: v.variant, year: parseYear(v.firstRegistration), mileage_km: v.mileageKm, price_eur: Math.round(v.priceEur), source: "listing", source_url: ownKey(v) }]
+      ? [{ ...base, variant: v.variant, year: parseYear(v.firstRegistration), mileage_km: v.mileageKm, price_eur: Math.round(v.priceEur), source: "listing", source_url: ownKey(v), seller: v.sellerType }]
       : []),
-    ...web.map((w) => ({ ...base, variant: w.title.slice(0, 200), year: w.year, mileage_km: w.mileageKm, price_eur: Math.round(w.priceEur), source: "web", source_url: w.url })),
+    ...web.map((w) => ({ ...base, variant: w.title.slice(0, 200), year: w.year, mileage_km: w.mileageKm, price_eur: Math.round(w.priceEur), source: "web", source_url: w.url, seller: w.seller ?? null })),
   ].filter((r) => r.price_eur >= 500 && r.price_eur <= 500000);
   if (!rows.length) return;
   const { error } = await c.from("price_observations").upsert(rows, { onConflict: "source_url", ignoreDuplicates: true });

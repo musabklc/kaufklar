@@ -1,7 +1,7 @@
 import "server-only";
 
 import { LinkError, validateListingUrl } from "../guards";
-import { pagePrice } from "../analysis/market";
+import { pagePrice, pageSeller } from "../analysis/market";
 import type { WebListing } from "../ai/provider";
 
 export { LinkError };
@@ -71,7 +71,7 @@ async function fetchPage(start: URL): Promise<{ res: Response | null; url: URL }
  */
 export async function verifyListings(list: WebListing[], model: string | null): Promise<WebListing[]> {
   const checked = await Promise.all(
-    list.slice(0, 8).map(async (l) => {
+    list.slice(0, 16).map(async (l): Promise<WebListing | null> => {
       try {
         const url = validateListingUrl(l.url);
         if (url.hostname.endsWith("mobile.de")) return null;
@@ -80,7 +80,7 @@ export async function verifyListings(list: WebListing[], model: string | null): 
         const html = (await res.text()).slice(0, MAX_BYTES);
         if (model && !html.toLowerCase().includes(model.toLowerCase())) return null;
         const price = pagePrice(html);
-        return price ? { ...l, priceEur: price } : null;
+        return price ? { ...l, priceEur: price, seller: pageSeller(html) } : null;
       } catch {
         return null;
       }

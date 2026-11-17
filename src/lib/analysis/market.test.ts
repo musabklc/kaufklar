@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pagePrice, plausibleListings, priceVerdict } from "./market.ts";
+import { canonicalUrl, pagePrice, pageSeller, plausibleListings, priceVerdict } from "./market.ts";
 
 const l = (priceEur: number, year: number | null, mileageKm: number | null, url = "https://www.mobile.de/x") => ({ title: "CLS 500", priceEur, year, mileageKm, url });
 
@@ -26,4 +26,20 @@ test("Preis aus der Inseratsseite lesen", () => {
   assert.equal(pagePrice('{"@type":"Offer","price": 12990,"priceCurrency":"EUR"}'), 12990);
   assert.equal(pagePrice('{"price":"0"}'), null);
   assert.equal(pagePrice("kein Preis"), null);
+});
+
+test("Privat oder Händler aus der Inseratsseite", () => {
+  assert.equal(pageSeller('adInfo = { posterType: "PRIVATE" }'), "privat");
+  assert.equal(pageSeller("posterType: 'COMMERCIAL', other: { posterType: 'PRIVATE' }"), "gewerblich");
+  assert.equal(pageSeller('{"isDealer":true}'), "gewerblich");
+  assert.equal(pageSeller('{"isDealer":false}'), "privat");
+  assert.equal(pageSeller("nichts"), null);
+});
+
+test("Gleiches Inserat = gleicher Link", () => {
+  const a = canonicalUrl(new URL("https://www.kleinanzeigen.de/s-anzeige/golf-7-highline/3569965053-216-2917?utm=x"));
+  const b = canonicalUrl(new URL("https://www.kleinanzeigen.de/s-anzeige/volkswagen-golf-7/3569965053-216-2917"));
+  assert.equal(a, "https://www.kleinanzeigen.de/s-anzeige/3569965053");
+  assert.equal(a, b);
+  assert.equal(canonicalUrl(new URL("https://www.autoscout24.de/angebote/vw-golf-abc?x=1#y")), "https://www.autoscout24.de/angebote/vw-golf-abc");
 });

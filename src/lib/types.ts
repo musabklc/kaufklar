@@ -141,7 +141,7 @@ export type Recommendation = {
   reasons: string[];
 };
 
-export type Comp = { price: number; source: "nutzer" | "index" | "web"; url?: string; label?: string };
+export type Comp = { price: number; source: "nutzer" | "index" | "web"; url?: string; label?: string; seller?: "privat" | "gewerblich" | null };
 
 export type Alternative = AiAudit["alternatives"][number] & { searchUrl: string; indexMedian: number | null; indexCount: number };
 

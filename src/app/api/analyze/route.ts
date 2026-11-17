@@ -66,8 +66,9 @@ export async function POST(req: Request) {
     : Promise.resolve(null);
   const webP: Promise<WebListing[]> =
     provider?.searchPrices && webSearchEnabled()
-      ? provider
-          .searchPrices(vehicle)
+      ? // Zwei Suchen parallel (je ein Portal) = mehr prüfbare Angebote
+        Promise.all(["AutoScout24", "Kleinanzeigen"].map((p) => provider.searchPrices!(vehicle, p).catch((e) => (console.error("price search failed", p, e), []))))
+          .then((lists) => lists.flat())
           .then(async (found) => {
             const ok = await verifyListings(found, vehicle.model);
             console.info(`marktcheck: ${found.length} gefunden, ${ok.length} im Inserat geprüft`, found.map((f) => f.url || "(kein Portal-Link)"));
@@ -81,7 +82,7 @@ export async function POST(req: Request) {
   const comps: Comp[] = [
     ...indexComps,
     // Gleiches Inserat nicht doppelt zählen (schon im Index oder das eigene)
-    ...web.filter((w) => w.url !== vehicle.listingUrl && !indexComps.some((c) => c.url === w.url)).map((w) => ({ price: w.priceEur, source: "web" as const, url: w.url || undefined, label: w.title })),
+    ...web.filter((w) => w.url !== vehicle.listingUrl && !indexComps.some((c) => c.url === w.url)).map((w) => ({ price: w.priceEur, source: "web" as const, url: w.url || undefined, label: w.title, seller: w.seller })),
     ...userComps.map((price) => ({ price, source: "nutzer" as const })),
   ];
 

@@ -7,10 +7,16 @@ type Listing = { title: string; priceEur: number; year: number | null; mileageKm
 
 const PORTALS = /(^|\.)(mobile\.de|autoscout24\.(de|at|com)|kleinanzeigen\.de|heycar\.com|pkw\.de|autohero\.com|carwow\.de|meinauto\.de|automobile\.de)$/;
 
+/** Einheitlicher Link je Inserat, damit dasselbe Inserat mit anderem Link-Text nicht doppelt zählt. */
+export const canonicalUrl = (u: URL) => {
+  const ka = u.hostname.endsWith("kleinanzeigen.de") && u.pathname.match(/^\/s-anzeige\/(?:.*\/)?(\d{6,})/);
+  return ka ? `https://www.kleinanzeigen.de/s-anzeige/${ka[1]}` : `${u.origin}${u.pathname}`;
+};
+
 const portalUrl = (raw: string) => {
   try {
     const u = new URL(raw);
-    return u.protocol === "https:" && PORTALS.test(u.hostname) ? u.toString() : "";
+    return u.protocol === "https:" && PORTALS.test(u.hostname) ? canonicalUrl(u) : "";
   } catch {
     return "";
   }
@@ -47,6 +53,13 @@ export function priceVerdict(asking: number | null, median: number | null): Pric
   if (pct <= 5) return { label: "Gut eingepreist", tone: "ok", detail: pct < -2 ? `${diff}.` : "Liegt im Marktschnitt." };
   if (pct <= 15) return { label: "Etwas teuer", tone: "warn", detail: `${diff} – Verhandlungsspielraum nutzen.` };
   return { label: "Zu teuer", tone: "bad", detail: `${diff}.` };
+}
+
+/** Privat oder Händler laut Inseratsseite (Kleinanzeigen: posterType, AutoScout24: isDealer). Erste Angabe = das Inserat selbst. */
+export function pageSeller(html: string): "privat" | "gewerblich" | null {
+  const m = html.match(/posterType["']?\s*:\s*["'](PRIVATE|COMMERCIAL)|"isDealer"\s*:\s*(true|false)/);
+  if (!m) return null;
+  return m[1] === "COMMERCIAL" || m[2] === "true" ? "gewerblich" : "privat";
 }
 
 /** Preis aus einer Inseratsseite (Schema.org-Angabe in Meta-Tag oder JSON-LD). */

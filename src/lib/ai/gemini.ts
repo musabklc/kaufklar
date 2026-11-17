@@ -130,9 +130,10 @@ ${JSON.stringify(r, null, 2)}
   }
 
   /** Nur mit bezahltem Gemini-Tarif (Google-Suche ist im Gratis-Tarif nicht enthalten). */
-  async searchPrices(v: Vehicle): Promise<WebListing[]> {
+  async searchPrices(v: Vehicle, portal: string): Promise<WebListing[]> {
     const q = [v.make, v.model, v.variant, v.fuel, v.powerKw && `${v.powerKw} kW`, v.firstRegistration && `EZ ${v.firstRegistration}`, v.mileageKm && `${v.mileageKm} km`].filter(Boolean).join(", ");
-    const out = await this.json(WebListingsSchema, PRICE_SYSTEM, [{ type: "text", text: `Fahrzeug: ${q}` }], true);
+    const out = await this.json(WebListingsSchema, PRICE_SYSTEM, [{ type: "text", text: `Fahrzeug: ${q}
+Suche diesmal nur auf ${portal}.` }], true);
     // Nur vergleichbare Angebote; Links nur zu echten Portalen (schützt vor erfundenen Links).
     return plausibleListings(out.listings, v);
   }

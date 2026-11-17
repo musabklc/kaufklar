@@ -1,7 +1,8 @@
 import type { AiAudit, Extraction, Moderation, ReportInput, Vehicle } from "../types";
 
 export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp"; data: string };
-export type WebListing = { title: string; priceEur: number; year: number | null; mileageKm: number | null; url: string };
+export type WebListing = { title: string; priceEur: number; year: number | null; mileageKm: number | null; url: string; seller?: Seller };
+export type Seller = "privat" | "gewerblich" | null;
 
 /** Austauschbare KI-Schnittstelle – ein weiteres Modell braucht nur eine neue Implementierung. */
 export interface AiProvider {
@@ -10,7 +11,7 @@ export interface AiProvider {
   audit(input: { vehicle: Vehicle; knowledgeSummary: string; images: ImageInput[]; photosNote?: string }): Promise<AiAudit>;
   moderate(report: ReportInput): Promise<Moderation>;
   /** Optional: Vergleichsangebote per Websuche (kostenpflichtige Tarife). */
-  searchPrices?(vehicle: Vehicle): Promise<WebListing[]>;
+  searchPrices?(vehicle: Vehicle, portal: string): Promise<WebListing[]>;
 }
 
 export class AiError extends Error {}

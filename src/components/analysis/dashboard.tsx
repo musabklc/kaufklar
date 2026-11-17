@@ -426,7 +426,10 @@ function PriceSection({ r, onComps }: { r: AnalysisResult; onComps: (c: number[]
             {linked.map((c) => (
               <li key={c.url} className="flex items-center justify-between gap-3 py-2">
                 <a href={c.url} target="_blank" rel="noopener noreferrer nofollow" className="min-w-0 truncate text-brand hover:underline">{c.label || new URL(c.url!).hostname}</a>
-                <span className="shrink-0 tabular">{fmt(c.price)}</span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {c.seller && <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{c.seller === "privat" ? "Privat" : "Händler"}</span>}
+                  <span className="tabular">{fmt(c.price)}</span>
+                </span>
               </li>
             ))}
           </ul>
