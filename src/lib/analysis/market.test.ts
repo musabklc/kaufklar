@@ -76,6 +76,7 @@ test("Karosserie und Ausstattungslinie trennen", () => {
   assert.equal(bodyOf("BMW 320d Touring"), "Kombi");
   assert.equal(bodyOf("BMW 320d Gran Turismo M Sport"), "Gran Turismo");
   assert.equal(bodyOf("Kia Ceed GT Line"), null);
+  assert.equal(bodyOf("sehr gepflegt, scheckheftgepflegt"), null);
   assert.equal(trimOf("BMW 320d M Sportpaket"), "M Sport");
   assert.equal(trimOf("Audi A5 Sportback S line"), "S line");
   assert.equal(trimOf("Premium Sportsitze, Design line"), null);

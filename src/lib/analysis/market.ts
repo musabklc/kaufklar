@@ -124,7 +124,7 @@ export function kaSearchUrl(v: Pick<Vehicle, "make" | "model" | "variant" | "fir
 const BODIES: [string, RegExp][] = [
   ["Coupé", /coup[eé]/i],
   ["Cabrio", /cabrio|roadster|spyder|spider/i],
-  ["Gran Turismo", /gran turismo|gt(?![\s-]?line)/i],
+  ["Gran Turismo", /gran turismo|\bgt\b(?![\s-]?line)/i],
   ["Kombi", /touring|kombi|avant\b|variant\b|t-modell|sports ?tourer|estate|combi\b/i],
 ];
 const TRIMS: [string, RegExp][] = [
