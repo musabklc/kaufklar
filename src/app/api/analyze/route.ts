@@ -80,7 +80,8 @@ export async function POST(req: Request) {
 
   const comps: Comp[] = [
     ...indexComps,
-    ...web.filter((w) => !w.url || w.url !== vehicle.listingUrl).map((w) => ({ price: w.priceEur, source: "web" as const, url: w.url || undefined, label: w.title })),
+    // Gleiches Inserat nicht doppelt zählen (schon im Index oder das eigene)
+    ...web.filter((w) => w.url !== vehicle.listingUrl && !indexComps.some((c) => c.url === w.url)).map((w) => ({ price: w.priceEur, source: "web" as const, url: w.url || undefined, label: w.title })),
     ...userComps.map((price) => ({ price, source: "nutzer" as const })),
   ];
 
