@@ -98,3 +98,24 @@ test("HU 08/2028 im November 2026 ist bei einem 2012er normal (frische HU, 24 Mo
   assert.ok(isHuTopic("Unplausibles HU-Datum (TÜV 08/2028)"));
   assert.ok(!isHuTopic("Hubraum passt nicht zur Leistung"));
 });
+
+test("Motor/Getriebe: wahrscheinlich aus Datenbank, angegeben aus Inserat, unklar ohne Treffer", () => {
+  const [m, g] = run({}).identification!;
+  assert.equal(m.certainty, "wahrscheinlich");
+  assert.match(m.label, /N47/);
+  assert.equal(g.part, "Getriebe");
+  assert.equal(run({ engineCode: "N47D20" }).identification![0].certainty, "angegeben");
+  const unknown = run({ displacementCcm: null, variant: "530d", transmission: "Automatik" });
+  assert.equal(unknown.identification![0].certainty, "unklar");
+  assert.ok(unknown.questions.some((q) => q.includes("Feld D.2")));
+});
+
+test("Geringe Datenbasis: keine positive Empfehlung", () => {
+  const thin = run({ mileageKm: null, firstRegistration: null, previousOwners: null, accidentStatus: null, inspectionDue: null, serviceHistory: null }, [9900, 9900, 9900, 10500]);
+  assert.equal(thin.dataQuality!.level, "gering");
+  assert.notEqual(thin.recommendation.verdict, "Kaufenswert");
+  assert.notEqual(thin.recommendation.verdict, "Preisverhandlung empfohlen");
+  assert.ok(thin.questions.some((q) => q.includes("Kilometerstand")));
+  // vollständige Angaben + KB-Treffer + Marktwert, nur KI fehlt → mittel
+  assert.equal(run({}, [9000, 10000, 11000]).dataQuality!.level, "mittel");
+});

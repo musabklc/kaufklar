@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { buildAnalysis } from "@/lib/analysis/engine";
 import { saveAnalysis, useChecked } from "@/lib/storage";
-import type { AnalysisResult, Comp, Finding, WeakPoint } from "@/lib/types";
+import type { AnalysisResult, Comp, Finding, Identification, WeakPoint } from "@/lib/types";
 import type { ForumInsight } from "@/lib/analysis/forum-insights";
 import { WatchButton } from "./watch-button";
 import { InspectionResult, ServiceBookResult } from "./inspection-summary";
@@ -110,7 +110,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
       <div className="mt-6 space-y-6">
         <PriceCheck r={r} />
         <Overview r={r} />
-        <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} />
+        <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} identification={r.identification} />
         <ForumSection items={r.forum ?? []} vehicle={r.vehicle} />
         {(r.inspection || r.serviceBook) && (
           <Section id="besichtigung-ergebnis" eyebrow="Vor Ort" title="Ergebnis deiner Besichtigung">
@@ -241,6 +241,15 @@ function Overview({ r }: { r: AnalysisResult }) {
       </div>
       <div className="rounded-3xl bg-card p-6 sm:p-8">
         <RiskGauge value={s.overallRisk} />
+        {r.dataQuality && r.dataQuality.level !== "gut" && (
+          <p className={`mt-4 flex gap-2 rounded-xl p-3 text-sm ${r.dataQuality.level === "gering" ? "bg-warn-soft" : "bg-muted"}`}>
+            <Info className="mt-0.5 size-4 shrink-0" />
+            <span>
+              <span className="font-medium">Aussagekraft: {r.dataQuality.level}.</span> {r.dataQuality.reasons.join(", ")}.
+              {r.dataQuality.level === "gering" && " Die Werte sind eine grobe Orientierung – kläre zuerst die offenen Punkte mit dem Verkäufer."}
+            </span>
+          </p>
+        )}
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <ScoreBar label="Fahrzeugzustand" value={s.condition} hint="aus Inseratsdaten geschätzt" />
           <ScoreBar label="Preis-Leistung" value={s.value} hint={s.value === null ? "keine Vergleichsdaten" : "vs. Vergleichsangebote"} />
@@ -289,12 +298,28 @@ function WeakPointCard({ w }: { w: WeakPoint }) {
   );
 }
 
-function WeakPoints({ items, knowledge }: { items: WeakPoint[]; knowledge: AnalysisResult["matchedKnowledge"] }) {
+const CERTAINTY: Record<Identification["certainty"], string> = { angegeben: "bg-ok-soft text-ok", wahrscheinlich: "bg-brand/10 text-brand", unklar: "bg-warn-soft text-warn" };
+
+function WeakPoints({ items, knowledge, identification }: { items: WeakPoint[]; knowledge: AnalysisResult["matchedKnowledge"]; identification?: Identification[] }) {
   const now = items.filter((w) => w.relevantNow);
   const later = items.filter((w) => !w.relevantNow);
   return (
     <Section id="schwachstellen" eyebrow="Technik" title="Schwachstellen & Reparaturkosten">
-      {knowledge.length ? (
+      {identification && (
+        <dl className="mb-5 grid gap-2 sm:grid-cols-2">
+          {identification.map((i) => (
+            <div key={i.part} className="rounded-xl bg-accent/60 p-3 text-sm">
+              <dt className="flex items-center justify-between gap-2 text-muted-foreground">
+                {i.part}
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${CERTAINTY[i.certainty]}`}>{i.certainty}</span>
+              </dt>
+              <dd className="mt-1 font-medium">{i.label}</dd>
+              <dd className="mt-1 text-muted-foreground">{i.basis}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {identification ? null : knowledge.length ? (
         <div className="mb-5 space-y-2">
           {knowledge.map((k) => (
             <div key={k.name} className="flex gap-3 rounded-xl bg-accent/60 p-3 text-sm">

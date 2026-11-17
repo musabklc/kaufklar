@@ -248,6 +248,11 @@ export type Negotiation = {
   message: string;
 } | null;
 
+/** Motor/Getriebe: was genau verbaut ist und wie sicher die Zuordnung ist. */
+export type Identification = { part: "Motor" | "Getriebe"; label: string; certainty: "angegeben" | "wahrscheinlich" | "unklar"; basis: string };
+/** Wie belastbar die Analyse ist – bei geringer Datenbasis keine scheinbar präzise Kaufempfehlung. */
+export type DataQuality = { level: "gut" | "mittel" | "gering"; reasons: string[] };
+
 export type ChecklistSection = { area: string; items: { id: string; text: string; specific: boolean }[] };
 export type GuideSection = { title: string; points: { text: string; specific: boolean }[] };
 
@@ -267,6 +272,9 @@ export type AnalysisResult = {
   testDrive: GuideSection[];
   negotiation: Negotiation;
   summary: { pros: string[]; cons: string[]; mustCheck: string[] };
+  /** Fehlen bei älteren gespeicherten Analysen. */
+  identification?: Identification[];
+  dataQuality?: DataQuality;
   alternatives: Alternative[];
   aiUsed: boolean;
   aiNote: string | null;

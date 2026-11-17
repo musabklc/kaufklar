@@ -1,4 +1,4 @@
-import { matchKnowledge, parseYear } from "./knowledge.ts";
+import { matchKnowledge, parseYear, type KbEntry } from "./knowledge.ts";
 import type {
   AiAudit,
   Alternative,
@@ -6,6 +6,8 @@ import type {
   AnalysisResult,
   ChecklistSection,
   CostItem,
+  DataQuality,
+  Identification,
   Finding,
   GuideSection,
   Level,
@@ -305,6 +307,8 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   for (const p of parts) breakdown.push({ label: p.label, points: Math.round(p.raw * p.w), note: p.note });
   const overallRisk = clamp(breakdown.reduce((s, b) => s + b.points, 0), 0, 100);
   const scores: Scores = { condition, value, techRisk, transparency, overallRisk, breakdown };
+  const identification = identify(v, kb, dataNotes);
+  const dataQuality = rateData({ missing, motorKnown: kb.some((e) => e.kind === "motor"), ai: Boolean(ai), market: price.marketEstimate !== null, kmKnown: km !== null, ageKnown: age !== null });
 
   // ---------- Empfehlung ----------
   const reasons: string[] = [];
@@ -331,6 +335,11 @@ export function buildAnalysis({ id, vehicle: v, comps: rawComps, ai, aiNote, alt
   } else {
     verdict = "Kaufenswert";
     reasons.push("Keine erheblichen Risiken erkannt und Preis im Marktrahmen");
+  }
+  // Ohne belastbare Daten keine positive Empfehlung, die genauer klingt, als sie ist
+  if (dataQuality.level === "gering" && (verdict === "Kaufenswert" || verdict === "Preisverhandlung empfohlen")) {
+    verdict = "Nur nach genauer Prüfung";
+    reasons.unshift(`Zu wenig Daten für eine verlässliche Einschätzung (${dataQuality.reasons.join(", ")})`);
   }
   if (!kb.length) reasons.push("Hinweis: Für diesen Motor/dieses Getriebe gibt es noch keinen Datenbankeintrag – modellspezifische Schwachstellen sind nur eingeschränkt bewertet.");
   reasons.push("Unabhängig davon: Besichtigung, Probefahrt und idealerweise ein Gebrauchtwagencheck in einer Werkstatt oder bei einer Prüforganisation.");
@@ -430,6 +439,10 @@ Viele Grüße`;
   // ---------- Fragen ----------
   const q = [
     ...kbWps.filter((w) => w.question).map((w) => w.question!),
+    ...(v.mileageKm === null ? ["Wie hoch ist der aktuelle Kilometerstand, und ist er belegbar (Serviceheft, HU-Berichte)?"] : []),
+    ...(v.firstRegistration === null ? ["Wann war die Erstzulassung?"] : []),
+    ...(!v.engineCode && identification[0].certainty === "unklar" ? ["Welcher Motor ist genau verbaut? Bitte Foto vom Fahrzeugschein (Feld D.2 und Typschlüssel 2.2) – persönliche Daten dürfen abgedeckt sein."] : []),
+    ...(v.transmission === "Automatik" && identification[1].certainty === "unklar" ? ["Welche Automatik ist verbaut (Wandler, Doppelkupplung, CVT), und wann wurde das Getriebeöl gewechselt?"] : []),
     ...(v.serviceHistory === null ? ["Liegt ein vollständiges Serviceheft bzw. liegen Rechnungen vor?"] : []),
     ...(v.accidentStatus === null ? ["Ist das Fahrzeug unfallfrei? Gab es Lack- oder Karosseriearbeiten?"] : []),
     ...(v.previousOwners === null ? ["Wie viele Vorbesitzer hatte das Fahrzeug?"] : []),
@@ -511,6 +524,8 @@ Viele Grüße`;
     recommendation: { verdict, reasons: dedupe(reasons) },
     checklist,
     questions,
+    identification,
+    dataQuality,
     testDrive,
     negotiation,
     summary: { pros: dedupe([...pros, ...(ai?.pros ?? [])]), cons: dedupe([...cons, ...(ai?.cons ?? [])]), mustCheck },
@@ -525,3 +540,43 @@ Viele Grüße`;
 }
 
 export { parseYear };
+
+/** Motor und Getriebe zuordnen – mit ehrlicher Angabe, wie sicher das ist. */
+export function identify(v: Vehicle, kb: KbEntry[], dataNotes: string[] = []): Identification[] {
+  const motors = kb.filter((e) => e.kind === "motor");
+  const gears = kb.filter((e) => e.kind === "getriebe");
+  const confirm = "Bestätigen über den Fahrzeugschein (Feld D.2 / Typschlüssel 2.2) oder die FIN.";
+  let engine: Identification;
+  if (v.engineCode) {
+    const fromEea = dataNotes.some((n) => n.includes(`Motorcode ${v.engineCode}`));
+    engine = { part: "Motor", label: `Motorcode ${v.engineCode}${motors[0] ? ` – ${motors[0].name}` : ""}`, certainty: "angegeben", basis: `${fromEea ? "Aus den EU-Typdaten (eindeutiger Treffer)." : "Steht im Inserat."} ${confirm}` };
+  } else if (motors.length === 1) {
+    engine = { part: "Motor", label: motors[0].name, certainty: "wahrscheinlich", basis: `${motors[0].matchNote} ${confirm}` };
+  } else if (motors.length > 1) {
+    engine = { part: "Motor", label: motors.map((e) => e.name).join(" oder "), certainty: "unklar", basis: `Mehrere Motoren passen zu den Angaben. ${confirm}` };
+  } else {
+    const spec = [v.displacementCcm && `${(v.displacementCcm / 1000).toFixed(1).replace(".", ",")} l`, v.fuel, v.powerKw && `${v.powerKw} kW`].filter(Boolean).join(", ");
+    engine = { part: "Motor", label: spec || "nicht angegeben", certainty: "unklar", basis: `Kein passender Eintrag in unserer Datenbank – motortypische Schwachstellen sind nur eingeschränkt bewertet. ${confirm}` };
+  }
+  let gearbox: Identification;
+  if (v.transmissionDetail) gearbox = { part: "Getriebe", label: [v.transmission, v.transmissionDetail, gears[0] && `– ${gears[0].name}`].filter(Boolean).join(" "), certainty: "angegeben", basis: "Steht im Inserat." };
+  else if (gears.length === 1) gearbox = { part: "Getriebe", label: gears[0].name, certainty: "wahrscheinlich", basis: gears[0].matchNote };
+  else if (v.transmission === "Schaltgetriebe") gearbox = { part: "Getriebe", label: "Schaltgetriebe", certainty: "angegeben", basis: "Steht im Inserat." };
+  else if (v.transmission === "Automatik")
+    gearbox = { part: "Getriebe", label: "Automatik, Bauart unbekannt", certainty: "unklar", basis: "Wandler, Doppelkupplung oder CVT haben unterschiedliche Schwachstellen – beim Verkäufer erfragen." };
+  else gearbox = { part: "Getriebe", label: "nicht angegeben", certainty: "unklar", basis: "Im Inserat fehlt die Getriebeart." };
+  return [engine, gearbox];
+}
+
+/** Datenbasis bewerten. "gering" = so wenig bekannt, dass eine positive Empfehlung irreführend wäre. */
+export function rateData(d: { missing: string[]; motorKnown: boolean; ai: boolean; market: boolean; kmKnown: boolean; ageKnown: boolean }): DataQuality {
+  const reasons: string[] = [];
+  if (d.missing.length >= 2) reasons.push(`${d.missing.length} wichtige Angaben fehlen`);
+  if (!d.kmKnown) reasons.push("Kilometerstand unbekannt");
+  if (!d.ageKnown) reasons.push("Erstzulassung unbekannt");
+  if (!d.motorKnown) reasons.push("Motor nicht sicher zugeordnet");
+  if (!d.ai) reasons.push("ohne KI-Prüfung des Inserats");
+  if (!d.market) reasons.push("zu wenig Vergleichspreise");
+  const level = d.missing.length >= 4 || (!d.kmKnown && !d.ageKnown) || (!d.motorKnown && !d.ai) ? "gering" : reasons.length ? "mittel" : "gut";
+  return { level, reasons };
+}
