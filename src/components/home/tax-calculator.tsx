@@ -15,7 +15,7 @@ export function TaxCalculator() {
   const v = { fuel, displacementCcm: ccm || null, co2GPerKm: co2 || null } as Vehicle;
   const tax = kfzSteuer(v, new Date(year, 5, 1));
 
-  const field = "h-12 w-full rounded-[var(--radius)] border-0 bg-white px-3 text-lg font-semibold tabular outline-none focus-visible:ring-3 focus-visible:ring-ring/40";
+  const field = "h-12 w-full rounded-xl border-0 bg-background px-3 text-lg font-semibold tabular outline-none focus-visible:ring-3 focus-visible:ring-ring/40";
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
       <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">

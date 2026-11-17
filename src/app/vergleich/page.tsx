@@ -24,12 +24,12 @@ export default function VergleichPage() {
   const toggle = (id: string) => setSel(sel.includes(id) ? sel.filter((x) => x !== id) : sel.length < 3 ? [...sel, id] : sel);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-[78rem] px-4 py-10 sm:px-6">
       <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight">Inserate vergleichen</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Wähle 2–3 deiner Analysen. Wir sagen dir klar, welches Auto die bessere Wahl ist – und warum.</p>
 
       {list && list.length < 2 && (
-        <div className="mt-8 rounded-2xl border bg-card p-8 text-center">
+        <div className="mt-8 rounded-3xl bg-card p-8 text-center">
           <p className="text-muted-foreground">Für einen Vergleich brauchst du mindestens zwei Analysen.</p>
           <Link href="/" className="mt-3 inline-flex items-center gap-1 font-medium text-brand">Weiteres Inserat analysieren <ArrowRight className="size-4" /></Link>
         </div>
@@ -51,14 +51,14 @@ export default function VergleichPage() {
 
       {result && (
         <div className="mt-8 space-y-6 animate-rise">
-          <div className="rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8">
+          <div className="rounded-3xl bg-foreground p-6 text-background sm:p-8">
             <p className="flex items-center gap-2 text-sm opacity-70"><Trophy className="size-4" /> Unsere Empfehlung</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Nimm den {title(result.ranked[0].r)}</h2>
             <ul className="mt-4 space-y-1.5 text-sm opacity-90">{result.reasons.map((x) => <li key={x}>– {x}</li>)}</ul>
             <p className="mt-4 text-xs opacity-60">Rangfolge: Gesamtrisiko + 1 Punkt je 5 € Monatskosten über dem günstigsten + Abzug für schwaches Preis-Leistungs-Verhältnis. Weniger Punkte = besser.</p>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border bg-card">
+          <div className="overflow-x-auto rounded-3xl bg-card">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b text-left">

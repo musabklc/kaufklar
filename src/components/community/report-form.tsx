@@ -10,7 +10,7 @@ import { readJson } from "@/components/intake/intake-flow";
 
 type Initial = { make?: string | null; model?: string | null; engineCode?: string | null; year?: number | null };
 
-const selectCls = "h-11 w-full rounded-[var(--radius)] border border-input bg-card px-3 text-base outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm";
+const selectCls = "h-11 w-full rounded-xl border border-input bg-card px-3 text-base outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm";
 const toInt = (s: string) => (s.replace(/\D/g, "") ? Number(s.replace(/\D/g, "")) : null);
 
 /** Kunden melden typische Probleme. Moderation und Zusammenfassung passieren auf dem Server. */

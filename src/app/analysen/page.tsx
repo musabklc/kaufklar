@@ -14,7 +14,7 @@ export default function AnalysenPage() {
       <h1 className="text-3xl font-semibold tracking-tight">Meine Analysen</h1>
       <p className="mt-2 text-sm text-muted-foreground">Gespeichert nur in diesem Browser. Wir speichern keine Analysen auf unseren Servern.</p>
       {list && list.length === 0 && (
-        <div className="mt-10 rounded-2xl border bg-card p-8 text-center">
+        <div className="mt-10 rounded-3xl bg-card p-8 text-center">
           <p className="text-muted-foreground">Noch keine Analysen.</p>
           <Link href="/" className="mt-3 inline-flex items-center gap-1 font-medium text-brand">Erste Analyse starten <ArrowRight className="size-4" /></Link>
         </div>
@@ -23,7 +23,7 @@ export default function AnalysenPage() {
         {list?.map((a) => {
           const v = a.vehicle;
           return (
-            <li key={a.id} className="flex items-center gap-3 rounded-2xl border bg-card p-4">
+            <li key={a.id} className="flex items-center gap-3 rounded-3xl bg-card p-4">
               <Link href={`/analyse/${a.id}`} className="min-w-0 flex-1">
                 <p className="truncate font-medium">{[v.make, v.model, v.variant].filter(Boolean).join(" ")}</p>
                 <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">

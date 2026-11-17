@@ -1,8 +1,10 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
 import { IntakeFlow } from "@/components/intake/intake-flow";
 import { ProvenanceLegend } from "@/components/analysis/provenance";
+import { PriceGauge } from "@/components/analysis/parts";
 import { TaxCalculator } from "@/components/home/tax-calculator";
 import { aiConfigured } from "@/lib/ai/provider";
 import { KNOWLEDGE } from "@/lib/analysis/knowledge";
@@ -16,48 +18,98 @@ async function Intake() {
 const engines = KNOWLEDGE.filter((k) => k.kind === "motor");
 const gearboxes = KNOWLEDGE.filter((k) => k.kind === "getriebe");
 
+// Echte Vergleichsangebote aus der Kaufklar-Analyse eines CLS 500 (Kleinanzeigen, Preise im Inserat geprüft, Nov. 2026).
+const CLS_COMPS = [
+  { title: "CLS 500 C219, V8 388 PS", detail: "2008 · Privat", price: "12.000 €" },
+  { title: "CLS 500 AMG-Paket, MB-Service", detail: "2009 · Privat", price: "10.999 €" },
+  { title: "CLS 500 Facelift, LPG-Anlage", detail: "2008 · Privat", price: "7.999 €" },
+];
+
 export default function Home() {
   return (
     <>
-      {/* Erster Bildschirm: Titel, ein Satz, die Eingabe – daneben ein echtes Analyse-Ergebnis als Beispiel */}
-      <section className="mx-auto grid max-w-6xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pt-16 lg:pb-24 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+      {/* Erster Bildschirm: Titel, ein Satz, die Eingabe – daneben ein echtes Auto mit seinem echten Ergebnis */}
+      <section id="pruefen" className="mx-auto grid *:min-w-0 max-w-[78rem] scroll-mt-20 items-center gap-10 px-4 pb-20 pt-8 sm:px-6 sm:pt-14 lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:pb-28">
         <div>
-          <h1 className="animate-rise text-[clamp(3rem,9vw,5.6rem)] font-bold leading-[0.9] tracking-[-0.04em] whitespace-nowrap">
-            Erst prüfen.<br />Dann kaufen.
+          <h1 className="animate-rise text-[clamp(2.6rem,6.2vw,4.75rem)] font-semibold leading-[0.98] tracking-[-0.035em] text-balance">
+            Gebrauchtwagen? Erst prüfen.
           </h1>
-          <p className="animate-rise mt-8 max-w-xl text-xl leading-snug [animation-delay:80ms]">
-            Link oder Screenshot vom Inserat einfügen: Kaufklar zeigt die Schwachstellen genau dieses Motors, den fairen Preis und was du den Verkäufer fragen musst.
+          <p className="animate-rise mt-6 max-w-xl text-xl leading-snug text-foreground/85 [animation-delay:80ms]">
+            Link oder Screenshot vom Inserat einfügen. In einer Minute siehst du die Schwachstellen des Motors, den echten Marktpreis und was du den Verkäufer fragen musst.
           </p>
           <div className="animate-rise mt-8 [animation-delay:160ms]">
-            <Suspense fallback={<div className="h-52 animate-pulse rounded-[var(--radius)] bg-card" />}>
+            <Suspense fallback={<div className="h-52 animate-pulse rounded-2xl bg-card" />}>
               <Intake />
             </Suspense>
           </div>
+          <p className="mt-4 text-sm text-muted-foreground">Kostenlos, ohne Anmeldung. Für AutoScout24, Kleinanzeigen und mobile.de.</p>
         </div>
-        <SampleResult />
+        <HeroCar />
       </section>
 
-      {/* Behauptung 1: Wir kennen den Motor, nicht nur die Marke – Beweis: die echte Liste */}
-      <section className="reveal mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:py-24 sm:px-6 lg:grid-cols-[1fr_1.4fr]">
+      {/* Behauptung 1: Der Preis wird an echten, geprüften Angeboten gemessen */}
+      <section className="bg-card">
+        <div className="mx-auto grid *:min-w-0 max-w-[78rem] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:py-28">
+          <div>
+            <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">Der Preis, gemessen an echten Angeboten.</h2>
+            <p className="mt-6 max-w-lg text-lg">
+              Bei jeder Analyse sucht Kaufklar live nach vergleichbaren Autos: gleiches Modell, ähnliches Baujahr, ähnlicher Kilometerstand. Jedes gefundene Inserat wird geöffnet und der Preis direkt dort abgelesen. Was sich nicht prüfen lässt, zählt nicht.
+            </p>
+            <p className="mt-4 max-w-lg text-lg">Am Ende steht ein klares Urteil: gut eingepreist, zu teuer oder auffällig günstig.</p>
+          </div>
+          <figure data-ui className="rounded-3xl bg-background p-6 sm:p-8">
+            <p className="text-sm font-medium text-muted-foreground">Vergleichsangebote · Mercedes CLS 500</p>
+            <ul className="mt-4 space-y-3">
+              {CLS_COMPS.map((c) => (
+                <li key={c.title} className="flex items-center justify-between gap-4 rounded-2xl bg-card px-5 py-4 transition-transform hover:-translate-y-0.5">
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold">{c.title}</span>
+                    <span className="text-sm text-muted-foreground">{c.detail} · Preis im Inserat geprüft</span>
+                  </span>
+                  <span className="shrink-0 text-lg font-semibold tabular">{c.price}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 flex items-baseline justify-between gap-4 px-1">
+              <span className="text-muted-foreground">Marktschnitt</span>
+              <span className="text-2xl font-semibold tabular">11.000 €</span>
+            </p>
+            <figcaption className="sr-only">Echte Vergleichsangebote aus einer Kaufklar-Analyse</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      {/* Behauptung 2: Wir kennen den Motor, nicht nur die Marke – Beweis: Motorraum und die echte Liste */}
+      <section className="mx-auto grid *:min-w-0 max-w-[78rem] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:py-28">
+        <div className="overflow-hidden rounded-3xl">
+          <Image
+            src="/img/photo-f37734507.webp"
+            alt="Motorraum eines 2.0 TDI"
+            width={1280}
+            height={790}
+            sizes="(max-width: 1023px) 100vw, 640px"
+            className="aspect-[4/3] w-full object-cover transition-transform duration-700 hover:scale-[1.03]"
+          />
+        </div>
         <div>
-          <h2 className="text-4xl font-bold leading-[0.95] sm:text-5xl">Wir kennen den Motor, nicht nur die Marke.</h2>
+          <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">Wir kennen den Motor, nicht nur die Marke.</h2>
           <p className="mt-6 max-w-md text-lg">
-            Ein BMW 320d von 2012 hat andere Probleme als einer von 2016. Kaufklar ordnet Motor und Getriebe zu und nennt bekannte Schwachstellen mit Reparatur-Richtwert, Kilometerstand und woran du sie bei der Besichtigung erkennst.
+            Ein BMW 320d von 2012 hat andere Probleme als einer von 2016. Kaufklar ordnet Motor und Getriebe zu und nennt Schwachstellen mit Reparaturkosten und woran du sie bei der Besichtigung erkennst. Für jedes andere Modell recherchiert die KI die bekannten Probleme.
           </p>
-          <Link href="/methodik" className="mt-6 inline-block font-semibold text-brand underline underline-offset-4">So prüfen wir</Link>
-        </div>
-        <div className="grid gap-10 sm:grid-cols-2">
-          <List title="Motoren in der Datenbank" items={engines.map((e) => e.name)} />
-          <List title="Getriebe" items={gearboxes.map((e) => e.name)} />
+          <div className="mt-8 grid gap-8 sm:grid-cols-2">
+            <List title="Motoren in der Datenbank" items={engines.map((e) => e.name)} />
+            <List title="Getriebe" items={gearboxes.map((e) => e.name)} />
+          </div>
+          <Link href="/methodik" className="mt-8 inline-block font-semibold text-brand underline-offset-4 hover:underline">So prüfen wir</Link>
         </div>
       </section>
 
-      {/* Behauptung 2: Du siehst, was das Auto wirklich kostet – Beweis: der Rechner */}
-      <section className="bg-paper">
-        <div className="reveal mx-auto max-w-6xl px-4 py-16 lg:py-24 sm:px-6">
-          <h2 className="max-w-3xl text-4xl font-bold leading-[0.95] sm:text-5xl">Was kostet das Auto im Jahr an Steuer?</h2>
+      {/* Behauptung 3: Du siehst, was das Auto wirklich kostet – Beweis: der Rechner */}
+      <section className="bg-card">
+        <div className="mx-auto max-w-[78rem] px-4 py-20 sm:px-6 lg:py-28">
+          <h2 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">Was kostet das Auto im Jahr an Steuer?</h2>
           <p className="mt-6 max-w-2xl text-lg">
-            Vier Angaben aus dem Fahrzeugschein, gerechnet nach Kraftfahrzeugsteuergesetz. In jeder Analyse kommen Sprit, Wartung und absehbare Reparaturen dazu – als echte Monatskosten.
+            Vier Angaben aus dem Fahrzeugschein, gerechnet nach Kraftfahrzeugsteuergesetz. In jeder Analyse kommen Sprit, Wartung und absehbare Reparaturen dazu, als echte Monatskosten.
           </p>
           <div className="mt-12">
             <TaxCalculator />
@@ -65,23 +117,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Behauptung 3: Preise aus echten Inseraten, und nichts wird erfunden */}
-      <section className="reveal mx-auto grid max-w-6xl gap-12 px-4 py-16 lg:py-24 sm:px-6 lg:grid-cols-2">
+      {/* Behauptung 4: Nichts wird erfunden – jede Aussage ist gekennzeichnet */}
+      <section className="mx-auto grid *:min-w-0 max-w-[78rem] items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:py-28">
         <div>
-          <h2 className="text-4xl font-bold leading-[0.95] sm:text-5xl">Preise aus echten Inseraten.</h2>
+          <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">Jede Aussage ist gekennzeichnet.</h2>
           <p className="mt-6 max-w-lg text-lg">
-            Jedes ausgelesene Inserat fließt anonym in den Kaufklar-Preisindex. Daraus ergeben sich Marktwert und fairer Preis für vergleichbare Autos – gleiches Modell, ähnliches Baujahr, ähnlicher Kilometerstand. Sind es weniger als drei Vergleiche, sagen wir das, statt zu schätzen.
-          </p>
-          <p className="mt-6 max-w-lg text-lg">
-            Danach: Verhandlungsnachricht zum Kopieren, Besichtigungs-Checkliste, Alternativen im gleichen Budget und ein Vergleich deiner Favoriten.
+            Du siehst immer, was feststeht, was typisch für das Modell ist und was du vor Ort prüfen musst. Danach: Verhandlungsnachricht zum Kopieren, Besichtigungs-Checkliste, Alternativen im gleichen Budget und ein Vergleich deiner Favoriten.
           </p>
         </div>
-        <div className="bg-card p-6 sm:p-8">
-          <h3 className="text-2xl font-bold">Jede Aussage ist gekennzeichnet</h3>
-          <p className="mt-2">So weißt du immer, was feststeht und was du vor Ort prüfen musst.</p>
-          <div className="mt-6">
-            <ProvenanceLegend />
-          </div>
+        <div className="rounded-3xl bg-card p-6 sm:p-8">
+          <ProvenanceLegend />
         </div>
       </section>
     </>
@@ -91,53 +136,47 @@ export default function Home() {
 function List({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-foreground/70">{title}</h3>
-      <ul className="mt-3">
+      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+      <ul className="mt-3 space-y-2">
         {items.map((i) => (
-          <li key={i} className="border-b border-border py-2.5 text-lg font-semibold leading-tight">{i}</li>
+          <li key={i} className="font-medium leading-snug">{i}</li>
         ))}
       </ul>
     </div>
   );
 }
 
-/** Echtes Ergebnis einer Kaufklar-Analyse (BMW 320d Touring), als Beispiel gekennzeichnet. */
-function SampleResult() {
+/** Echtes Auto, echtes Ergebnis: die Kaufklar-Analyse eines CLS 500 (Nov. 2026) als schwebende Karte über dem Foto. */
+function HeroCar() {
   return (
-    <figure data-ui className="animate-rise self-start bg-card [animation-delay:240ms]">
-      <div className="bg-paper px-5 py-4 sm:px-6">
-        <p className="text-sm font-medium text-foreground/70">Beispiel einer Analyse</p>
-        <p className="mt-1 text-2xl font-bold">BMW 320d Touring</p>
-        <p>EZ 03/2012 · 160.000 km · 135 kW · Automatik · 9.900 €</p>
+    <div className="animate-rise relative pb-28 [animation-delay:200ms] sm:pb-20">
+      <div className="overflow-hidden rounded-3xl">
+        <Image
+          src="/img/cls-hero-1560.webp"
+          alt="Schwarzer Mercedes CLS 500 auf der Straße"
+          width={1560}
+          height={780}
+          priority
+          sizes="(max-width: 1023px) 100vw, 680px"
+          className="aspect-[4/3] w-full object-cover"
+        />
       </div>
-      <div className="space-y-5 px-5 py-6 sm:px-6">
-        <div className="flex items-center justify-between gap-4 bg-warn-soft px-4 py-3">
-          <span className="text-lg font-bold">Nur nach genauer Prüfung</span>
-          <span className="text-right text-sm"><b className="block text-2xl tabular">57</b>Risiko von 100</span>
+      <figure data-ui className="absolute bottom-0 left-4 right-4 rounded-2xl bg-card p-5 shadow-[0_24px_60px_-20px_rgba(11,12,14,0.35)] sm:left-auto sm:right-6 sm:w-[22rem]">
+        <p className="text-sm text-muted-foreground">Mercedes CLS 500 · 2008 · 168.000 km</p>
+        <div className="mt-3 flex items-center gap-4">
+          <div className="w-28 shrink-0">
+            <PriceGauge pct={-27} />
+          </div>
+          <div>
+            <p className="text-xl font-semibold leading-tight text-warn">Auffällig günstig</p>
+            <p className="mt-1 text-sm">8.000 € statt Marktschnitt 11.000 €</p>
+          </div>
         </div>
-        <dl className="divide-y divide-border">
-          <Row k="Steuerkette (BMW N47)" v="2.000 – 4.500 €" note="Risiko hoch · ab ca. 80.000 km" />
-          <Row k="Getriebeölwechsel (ZF 8HP)" v="400 – 700 €" note="fällig, kein Nachweis im Inserat" />
-          <Row k="Kfz-Steuer" v="210 € / Jahr" note="nach KraftStG berechnet" />
-        </dl>
-        <div>
-          <p className="text-sm font-medium text-foreground/70">Frage an den Verkäufer</p>
-          <p className="mt-1 text-lg font-semibold leading-snug">„Wurde die Steuerkette bereits erneuert? Gibt es eine Rechnung dazu?“</p>
-        </div>
-      </div>
-      <figcaption className="sr-only">Beispielhafte Kaufklar-Analyse eines BMW 320d Touring</figcaption>
-    </figure>
-  );
-}
-
-function Row({ k, v, note }: { k: string; v: string; note: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 py-3">
-      <dt>
-        <span className="block font-semibold">{k}</span>
-        <span className="text-sm text-foreground/70">{note}</span>
-      </dt>
-      <dd className="shrink-0 font-bold tabular">{v}</dd>
+        <p className="mt-4 rounded-xl bg-background px-4 py-3 text-sm">
+          <span className="font-semibold">Getriebe-Steuerplatte</span> · 600–1.500 € · bei der Probefahrt alle Gänge durchschalten
+        </p>
+        <figcaption className="sr-only">Beispiel einer echten Kaufklar-Analyse</figcaption>
+      </figure>
     </div>
   );
 }

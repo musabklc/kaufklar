@@ -1,0 +1,66 @@
+{
+ "note": "Credits for the photographs in this folder: photos.mjs credits prints the footer block for the ones the pages use.",
+ "photos": [
+  {
+   "file": "photo-f199210345-1280.webp",
+   "files": [
+    "photo-f199210345-500.webp",
+    "photo-f199210345-960.webp",
+    "photo-f199210345-1280.webp",
+    "photo-f199210345-780x975.webp"
+   ],
+   "id": "f199210345",
+   "alt": "BMW 3er Touring (F31) 071410278",
+   "by": "Trop86",
+   "licence": "CC0",
+   "licenceUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "page": "https://commons.wikimedia.org/wiki/File:BMW_3er_Touring_(F31)_071410278.jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f39554564.webp",
+   "files": [
+    "photo-f39554564-500.webp",
+    "photo-f39554564-960.webp",
+    "photo-f39554564.webp"
+   ],
+   "id": "f39554564",
+   "alt": "The frontview of Volkswagen GOLF VII TSI Comfortline BLUEMOTION TECHNOLOGY with O.Z. RACING wheel",
+   "by": "Tokumeigakarinoaoshima",
+   "licence": "CC0",
+   "licenceUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "page": "https://commons.wikimedia.org/wiki/File:The_frontview_of_Volkswagen_GOLF_VII_TSI_Comfortline_BLUEMOTION_TECHNOLOGY_with_O.Z._RACING_wheel.JPG",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f37734507.webp",
+   "files": [
+    "photo-f37734507-500.webp",
+    "photo-f37734507-960.webp",
+    "photo-f37734507.webp"
+   ],
+   "id": "f37734507",
+   "alt": "2015 Audi Q3 2.0 TDI Typ 8U Engine Bay",
+   "by": "Kickaffe (Mario von Berg)",
+   "licence": "CC BY-SA 4.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:2015_Audi_Q3_2.0_TDI_Typ_8U_Engine_Bay.jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f7536071.webp",
+   "files": [
+    "photo-f7536071-500.webp",
+    "photo-f7536071-960.webp",
+    "photo-f7536071.webp"
+   ],
+   "id": "f7536071",
+   "alt": "Skoda Fabia II Instrument Cluster",
+   "by": "Alan from Crawley, United Kingdom",
+   "licence": "CC BY 2.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by/2.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Skoda_Fabia_II_Instrument_Cluster.jpg",
+   "source": "Wikimedia Commons"
+  }
+ ]
+}

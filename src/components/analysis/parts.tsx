@@ -91,7 +91,7 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
 
 export function Section({ id, title, eyebrow, action, children }: { id: string; title: string; eyebrow?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section id={id} className="reveal bg-card p-5 sm:p-8">
+    <section id={id} className="scroll-mt-32 rounded-3xl bg-card p-5 sm:p-8">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl" data-eyebrow={eyebrow}>{title}</h2>

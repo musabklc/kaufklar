@@ -58,24 +58,24 @@
 }
 
 :root {
-  /* Kaufklar – Papier, Tinte, Kennzeichen-Blau; Fahrzeugschein-Grün als Fläche. Risikofarben nur für Bewertungen. */
-  --background: #f4f4f0;
-  --foreground: #131417;
+  /* Kaufklar – hell & klar: kühles Off-White, weiße Flächen, Tinte, Kobaltblau als einzige Akzentfarbe. Risikofarben nur für Bewertungen. */
+  --background: #eef0f3;
+  --foreground: #0b0c0e;
   --card: #ffffff;
-  --card-foreground: #131417;
+  --card-foreground: #0b0c0e;
   --popover: #ffffff;
-  --popover-foreground: #131417;
-  --primary: #131417;
+  --popover-foreground: #0b0c0e;
+  --primary: #1f2de6;
   --primary-foreground: #ffffff;
-  --secondary: #e9e9e3;
-  --secondary-foreground: #131417;
-  --muted: #e9e9e3;
-  --muted-foreground: #565a60;
-  --accent: #e3e9f7;
-  --accent-foreground: #0b3c9e;
-  --brand: #0b3c9e;
+  --secondary: #e2e5ea;
+  --secondary-foreground: #0b0c0e;
+  --muted: #e2e5ea;
+  --muted-foreground: #4a4f57;
+  --accent: #e6e8fd;
+  --accent-foreground: #1f2de6;
+  --brand: #1f2de6;
   --brand-foreground: #ffffff;
-  --paper: #dfe8da;
+  --paper: #e2e5ea;
   --destructive: #b42318;
   --ok: #1e7a4f;
   --ok-soft: #dcefe3;
@@ -83,23 +83,23 @@
   --warn-soft: #f6e7cc;
   --bad: #b42318;
   --bad-soft: #f7dcd8;
-  --border: #dcdcd4;
-  --input: #c9c9c0;
-  --ring: #0b3c9e;
-  --chart-1: #0b3c9e;
+  --border: #d9dde3;
+  --input: #c9ced6;
+  --ring: #1f2de6;
+  --chart-1: #1f2de6;
   --chart-2: #1e7a4f;
   --chart-3: #a35c00;
   --chart-4: #b42318;
-  --chart-5: #565a60;
-  --radius: 0.2rem;
+  --chart-5: #4a4f57;
+  --radius: 0.75rem;
   --sidebar: #ffffff;
-  --sidebar-foreground: #131417;
-  --sidebar-primary: #131417;
+  --sidebar-foreground: #0b0c0e;
+  --sidebar-primary: #1f2de6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e9e9e3;
-  --sidebar-accent-foreground: #131417;
-  --sidebar-border: #dcdcd4;
-  --sidebar-ring: #0b3c9e;
+  --sidebar-accent: #e2e5ea;
+  --sidebar-accent-foreground: #0b0c0e;
+  --sidebar-border: #d9dde3;
+  --sidebar-ring: #1f2de6;
 }
 
 .dark {
@@ -178,3 +178,6 @@
 }
 
 @keyframes needle { from { transform: rotate(-90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Sichtbarer Tastatur-Fokus für Links und Buttons */
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 8px; }

@@ -55,7 +55,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
+    <div className="mx-auto max-w-[78rem] px-4 pb-24 pt-6 sm:px-6 sm:pt-10">
       {/* Kopf */}
       <div className="animate-rise">
         <p className="text-sm text-muted-foreground">Analyse vom {new Date(r.createdAt).toLocaleDateString("de-DE")}</p>
@@ -66,7 +66,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         <p className="mt-3 text-lg text-foreground/75">{facts.join(" · ")}</p>
         <EditVehicle r={r} />
         {r.dataNotes.map((n) => (
-          <p key={n} className="mt-4 flex items-start gap-2 bg-paper p-3 text-sm">
+          <p key={n} className="mt-4 flex items-start gap-2 rounded-2xl bg-card p-3 text-sm">
             <Info className="mt-0.5 size-4 shrink-0" /> {n}
           </p>
         ))}
@@ -82,7 +82,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         <ul className="flex gap-1 overflow-x-auto py-2 [scrollbar-width:none]">
           {NAV.map(([id, label]) => (
             <li key={id}>
-              <a href={`#${id}`} className="block whitespace-nowrap rounded-[var(--radius)] px-3 py-1.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:text-foreground">{label}</a>
+              <a href={`#${id}`} className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:text-foreground">{label}</a>
             </li>
           ))}
         </ul>
@@ -148,7 +148,7 @@ function PriceCheck({ r }: { r: AnalysisResult }) {
   const pct = verdict && p.asking && p.marketEstimate ? Math.round((p.asking / p.marketEstimate - 1) * 100) : null;
   const color = { ok: "text-ok", warn: "text-warn", bad: "text-bad" };
   return (
-    <section aria-label="Marktcheck" className="grid items-center gap-6 bg-card p-6 sm:grid-cols-[16rem_1fr] sm:p-8">
+    <section aria-label="Marktcheck" className="grid items-center gap-6 rounded-3xl bg-card p-6 sm:grid-cols-[16rem_1fr] sm:p-8">
       <div className="mx-auto w-full max-w-64">
         <PriceGauge pct={pct} />
       </div>
@@ -184,8 +184,8 @@ function Overview({ r }: { r: AnalysisResult }) {
   return (
     <section id="uebersicht" className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
       {r.ai?.expertSummary && (
-        <div className="bg-primary p-6 text-primary-foreground sm:p-8 lg:col-span-2">
-          <p className="flex items-center gap-2 text-sm font-medium opacity-70">Einschätzung unseres KI-Gutachters <span className="bg-primary-foreground/15 px-1.5 py-0.5 text-xs">KI-Einschätzung</span></p>
+        <div className="rounded-3xl bg-foreground p-6 text-background sm:p-8 lg:col-span-2">
+          <p className="flex items-center gap-2 text-sm font-medium opacity-70">Einschätzung unseres KI-Gutachters <span className="rounded-full bg-background/15 px-2 py-0.5 text-xs">KI-Einschätzung</span></p>
           <p className="mt-3 max-w-4xl text-xl leading-snug sm:text-2xl">{r.ai.expertSummary}</p>
         </div>
       )}
@@ -205,7 +205,7 @@ function Overview({ r }: { r: AnalysisResult }) {
         </div>
         <p className="mt-6 text-xs text-muted-foreground">Die Empfehlung berücksichtigt den Score, aber auch einzelne kritische Punkte. Sie ersetzt keine Fachbegutachtung.</p>
       </div>
-      <div className="bg-card p-6 sm:p-8">
+      <div className="rounded-3xl bg-card p-6 sm:p-8">
         <RiskGauge value={s.overallRisk} />
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <ScoreBar label="Fahrzeugzustand" value={s.condition} hint="aus Inseratsdaten geschätzt" />
@@ -335,7 +335,7 @@ function EditVehicle({ r }: { r: AnalysisResult }) {
         {open ? "Korrektur schließen" : "Angaben falsch oder unvollständig? Korrigieren"}
       </button>
       {open && (
-        <div className="mt-4 bg-card p-5 sm:p-7">
+        <div className="mt-4 rounded-3xl bg-card p-5 sm:p-7">
           <VehicleForm value={draft} onChange={setDraft} />
           <Button
             size="lg"

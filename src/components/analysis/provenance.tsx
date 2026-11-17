@@ -1,15 +1,15 @@
 import type { Provenance } from "@/lib/types";
 
 const P: Record<Provenance, { label: string; desc: string; cls: string }> = {
-  gesichert: { label: "Gesichert", desc: "steht so im Inserat", cls: "bg-ok-soft text-ok" },
+  gesichert: { label: "Gesichert", desc: "steht so im Inserat", cls: "bg-ok-soft text-foreground" },
   modelltypisch: { label: "Modelltypisch", desc: "bekannte Schwachstelle laut Datenbank", cls: "bg-paper text-foreground" },
   nutzer: { label: "Von Nutzern gemeldet", desc: "von mehreren Kaufklar-Nutzern unabhängig gemeldet", cls: "bg-ok-soft text-foreground" },
   ki: { label: "KI-Einschätzung", desc: "Vermutung der KI, nicht verifiziert", cls: "bg-secondary text-foreground" },
-  pruefen: { label: "Zu prüfen", desc: "muss vor Ort geklärt werden", cls: "bg-warn-soft text-warn" },
+  pruefen: { label: "Zu prüfen", desc: "muss vor Ort geklärt werden", cls: "bg-warn-soft text-foreground" },
 };
 
 export function ProvenanceBadge({ p }: { p: Provenance }) {
-  return <span className={`inline-flex shrink-0 items-center px-1.5 py-0.5 text-xs font-semibold ${P[p].cls}`}>{P[p].label}</span>;
+  return <span className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-semibold ${P[p].cls}`}>{P[p].label}</span>;
 }
 
 export function ProvenanceLegend() {

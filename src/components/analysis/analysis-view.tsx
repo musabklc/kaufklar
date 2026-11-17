@@ -7,7 +7,7 @@ import { useAnalysis } from "@/lib/storage";
 export function AnalysisView({ id }: { id: string }) {
   const analysis = useAnalysis(id);
 
-  if (analysis === undefined) return <div className="mx-auto max-w-6xl px-4 py-20 text-sm text-muted-foreground">Lade Analyse …</div>;
+  if (analysis === undefined) return <div className="mx-auto max-w-[78rem] px-4 py-20 text-sm text-muted-foreground">Lade Analyse …</div>;
   if (!analysis)
     return (
       <div className="mx-auto max-w-md px-4 py-20 text-center">

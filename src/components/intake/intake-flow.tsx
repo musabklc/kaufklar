@@ -108,7 +108,7 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
   if (step === "review")
     return (
       <div className="animate-rise space-y-5">
-        <div className="rounded-2xl border bg-card p-5 sm:p-7">
+        <div className="rounded-3xl bg-card p-5 sm:p-7">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
                             <h2 className="mt-1 text-xl font-semibold tracking-tight">Fahrzeugdaten prüfen</h2>
@@ -129,7 +129,7 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
           <VehicleForm value={vehicle} onChange={setVehicle} />
         </div>
 
-        <div className="rounded-2xl border bg-card p-5 sm:p-7">
+        <div className="rounded-3xl bg-card p-5 sm:p-7">
           <h3 className="font-semibold tracking-tight">Vergleichspreise <span className="font-normal text-muted-foreground">(optional, empfohlen)</span></h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Für eine seriöse Preisbewertung brauchen wir echte Vergleichsangebote. Suche auf mobile.de oder AutoScout24 nach gleichem Modell
@@ -157,15 +157,15 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
 
   const needsAi = mode !== "manuell" && !aiEnabled;
   return (
-    <div className="bg-card p-2">
-      <div role="group" aria-label="Eingabeart" className="grid grid-cols-3 gap-1 bg-muted p-1">
+    <div className="rounded-3xl bg-card p-2 shadow-[0_1px_0_rgba(11,12,14,0.04)]">
+      <div role="group" aria-label="Eingabeart" className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
         {MODES.map((m) => (
           <button
             key={m.id}
             type="button"
             aria-pressed={mode === m.id}
             onClick={() => (setMode(m.id), setError(null))}
-            className="flex min-h-11 items-center justify-center gap-2 rounded-lg px-2 text-sm font-medium text-foreground/75 transition-colors hover:text-foreground aria-pressed:bg-card aria-pressed:text-foreground"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-full px-2 text-sm font-medium text-foreground/75 transition-colors hover:text-foreground aria-pressed:bg-card aria-pressed:text-foreground"
           >
             <m.icon className="hidden size-4 shrink-0 sm:block" />
             <span className="truncate">{m.label}</span>
@@ -205,7 +205,7 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
               htmlFor="files"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => (e.preventDefault(), addFiles(e.dataTransfer.files))}
-              className="flex cursor-pointer flex-col items-center justify-center gap-2 bg-paper px-4 py-8 text-center transition-colors hover:bg-paper/70 focus-within:ring-3 focus-within:ring-ring/50"
+              className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl bg-background px-4 py-8 text-center transition-colors hover:bg-muted focus-within:ring-3 focus-within:ring-ring/50"
             >
               <ImagePlus className="size-7 text-brand" />
               <span className="font-medium">Screenshots oder Fotos auswählen</span>
@@ -294,7 +294,7 @@ function BusyCard({ kind }: { kind: "extract" | "analyze" }) {
     return () => clearInterval(t);
   }, [steps.length]);
   return (
-    <div className="animate-rise rounded-2xl border bg-card p-6 sm:p-8" aria-live="polite">
+    <div className="animate-rise rounded-3xl bg-card p-6 sm:p-8" aria-live="polite">
       <div className="flex items-center gap-3">
         <Loader2 className="size-5 animate-spin text-brand" />
         <p className="font-semibold">{kind === "extract" ? "Inserat wird ausgelesen" : "Analyse läuft"}</p>
