@@ -40,3 +40,8 @@ export async function aiBudgetExceeded() {
   if (error) return console.error("budget check failed", error.message), false;
   return (count ?? 0) >= limit;
 }
+
+/** IP-Hashes des Anfragen-Limits nach 24 Stunden löschen (täglicher Cron; die Datenbank räumt zusätzlich nebenbei auf). */
+export async function cleanupRateHits() {
+  await serviceDb()?.from("rate_hits").delete().lt("at", new Date(Date.now() - 864e5).toISOString());
+}

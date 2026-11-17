@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { VERDICT } from "@/components/analysis/parts";
 import { deleteAnalysis, useAnalyses } from "@/lib/storage";
 import { SavedInAccount } from "./saved-in-account";
+import { removeAnalysis } from "@/app/analyse/actions";
 
 export default function AnalysenPage() {
   const list = useAnalyses();
@@ -39,8 +40,9 @@ export default function AnalysenPage() {
                 size="icon-lg"
                 aria-label="Analyse löschen"
                 onClick={() => {
-                  if (!confirm("Diese Analyse endgültig aus dem Browser löschen?")) return;
+                  if (!confirm("Diese Analyse endgültig löschen (im Browser und auf unserem Server)?")) return;
                   deleteAnalysis(a.id);
+                  void removeAnalysis(a.id);
                 }}
               >
                 <Trash2 />

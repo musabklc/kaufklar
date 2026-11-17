@@ -120,11 +120,19 @@ export default function Datenschutz() {
         Es wird nur gesetzt, wenn du dich anmeldest, und enthält keine Tracking-Daten.
       </p>
 
-      <h2>4. Speicherung in deinem Browser</h2>
+      <h2>4. Speicherung deiner Analysen</h2>
       <p>
-        Deine Analysen und der Stand deiner Checklisten werden ausschließlich lokal in deinem Browser (localStorage) gespeichert, nicht auf unseren Servern. Wir können darauf
-        nicht zugreifen. Du kannst sie jederzeit unter „Meine Analysen“ oder über die Browser-Einstellungen löschen. Rechtsgrundlage ist § 25 Abs. 2 Nr. 2 TDDDG (unbedingt
-        erforderlich für den von dir gewünschten Dienst).
+        Jede Analyse (Fahrzeugdaten aus dem Inserat und das Ergebnis) speichern wir auf unserem Server unter einer zufälligen Kennung, damit der Link zur Analyse auf jedem
+        Gerät funktioniert. Bist du angemeldet, wird sie deinem Konto zugeordnet und bleibt bis zur Löschung oder Kontolöschung erhalten; ohne Konto löschen wir sie
+        automatisch nach 90 Tagen. Hochgeladene Bilder speichern wir dabei nicht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (der von dir gewünschte Dienst).
+      </p>
+      <p>
+        Zusätzlich liegen deine Analysen und der Stand deiner Checklisten in deinem Browser (localStorage). Du kannst Analysen jederzeit unter „Meine Analysen“ löschen – das
+        entfernt sie im Browser und auf unserem Server. Rechtsgrundlage für die Speicherung im Browser ist § 25 Abs. 2 Nr. 2 TDDDG.
+      </p>
+      <p>
+        Für Kostenkontrolle und Missbrauchsschutz zählen wir Anfragen pro Besucher anhand eines gesalzenen, nicht umkehrbaren Hashwerts der IP-Adresse (gelöscht nach 24 Stunden)
+        und protokollieren KI-Aufrufe ohne Inhalte und ohne Personenbezug (Modell, Dauer, Token-Anzahl, Fehlerart). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.
       </p>
 
       <h2>5. Tachoklar-Preisindex</h2>
