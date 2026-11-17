@@ -10,6 +10,7 @@ import { findComparables, modelMedian, recordObservations } from "@/lib/server/p
 import { eeaLookup } from "@/lib/server/eea";
 import { recallsFor } from "@/lib/server/recalls";
 import { communityIssuesFor } from "@/lib/server/community";
+import { forumInsightsFor } from "@/lib/server/forum-insights";
 import { fillFromEea } from "@/lib/analysis/eea-match";
 import { sealSecret, verifySeal } from "@/lib/seal";
 import { VehicleSchema, type AiAudit, type Alternative, type Comp } from "@/lib/types";
@@ -78,7 +79,14 @@ export async function POST(req: Request) {
     })
     .catch((e) => (console.error("marktcheck failed", e), [] as WebListing[]));
 
-  const [ai, web, indexComps, recalls, community] = await Promise.all([auditP, webP, findComparables(vehicle), recallsFor(vehicle, eea?.typeApprovals ?? []), communityIssuesFor(vehicle)]);
+  const [ai, web, indexComps, recalls, community, forum] = await Promise.all([
+    auditP,
+    webP,
+    findComparables(vehicle),
+    recallsFor(vehicle, eea?.typeApprovals ?? []),
+    communityIssuesFor(vehicle),
+    forumInsightsFor(vehicle).catch(() => []),
+  ]);
 
   const comps: Comp[] = [
     ...indexComps,
@@ -99,7 +107,7 @@ export async function POST(req: Request) {
     }),
   );
 
-  const result = buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community });
+  const result = { ...buildAnalysis({ id: crypto.randomUUID(), vehicle, comps, ai, aiNote, alternatives, dataNotes, recalls, community }), forum };
   // Nur gesiegelte, unverändert ausgelesene Inserate fließen in den Index (Schutz vor erfundenen Preisen).
   await recordObservations(vehicle, sealed, web);
   return json(result);

@@ -1,4 +1,6 @@
-import type { AiAudit, Extraction, Moderation, ReportInput, Vehicle } from "../types";
+import type { AiAudit, Extraction, ForumInsights, Moderation, ReportInput, Vehicle } from "../types";
+
+export type ForumPostInput = { board: string; threadTitle: string; authorCar: string | null; body: string };
 
 export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp"; data: string };
 export type WebListing = { title: string; priceEur: number; year: number | null; mileageKm: number | null; url: string; seller?: Seller };
@@ -10,6 +12,8 @@ export interface AiProvider {
   extract(input: { text?: string; images?: ImageInput[] }): Promise<Extraction>;
   audit(input: { vehicle: Vehicle; knowledgeSummary: string; images: ImageInput[]; photosNote?: string }): Promise<AiAudit>;
   moderate(report: ReportInput): Promise<Moderation>;
+  /** Erfahrungen (Schwachstellen/Pluspunkte) aus einem Forumsbeitrag herauslesen. */
+  forumInsights(post: ForumPostInput): Promise<ForumInsights>;
   /** Optional: Vergleichsangebote per Websuche (kostenpflichtige Tarife). */
 }
 

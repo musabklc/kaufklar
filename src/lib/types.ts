@@ -45,6 +45,26 @@ export const ModerationSchema = z.object({
   containsPersonalData: z.boolean().describe("enthält Namen, Telefonnummern, Adressen, Kennzeichen o. ä."),
 });
 export type Moderation = z.infer<typeof ModerationSchema>;
+
+/** Was die KI aus einem Forumsbeitrag herausliest: konkrete Erfahrungen zu einem Modell. */
+export const ForumInsightsSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        make: z.string().describe("Marke wie in Inseraten, z. B. BMW, Mercedes-Benz, VW"),
+        model: z.string().describe("Baureihe ohne Motorisierung, z. B. 3er, CLS, Golf, A4"),
+        engineCode: z.string().nullable().describe("Motorcode nur wenn genannt, z. B. N47, OM642"),
+        year: z.number().nullable().describe("Baujahr des betroffenen Autos, nur wenn genannt"),
+        kind: z.enum(["schwachstelle", "pluspunkt"]),
+        title: z.string().describe("einheitlicher Titel, 2–4 Wörter, ohne Modell, Seite oder Zahlen, z. B. 'Steuerkette gelängt', 'Luftfederung undicht', 'Motor langlebig'"),
+        component: z.enum(COMPONENTS),
+        mileageKm: z.number().nullable().describe("Kilometerstand beim Defekt bzw. bisher problemlos gefahren"),
+        costEur: z.number().nullable().describe("genannte Reparaturkosten in Euro"),
+      }),
+    )
+    .describe("leer, wenn der Beitrag keine eigene Erfahrung zu einem bestimmten Modell enthält"),
+});
+export type ForumInsights = z.infer<typeof ForumInsightsSchema>;
 export type ReportInput = { make: string; model: string; engineCode: string | null; year: number | null; component: string; description: string };
 
 export const Level = z.enum(["niedrig", "mittel", "hoch"]);
@@ -192,4 +212,6 @@ export type AnalysisResult = {
   recalls: import("./analysis/recalls").MatchedRecall[];
   /** Von Kunden gemeldete, freigegebene Probleme (Rohdaten für Neuberechnung im Browser). */
   community: import("./analysis/community").CommunityIssue[];
+  /** Erfahrungen aus dem Forum (KI-ausgelesen, mit Link zum Beitrag); fehlt bei älteren gespeicherten Analysen. */
+  forum?: import("./analysis/forum-insights").ForumInsight[];
 };

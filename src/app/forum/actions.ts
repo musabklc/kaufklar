@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { classifyPost } from "@/lib/server/forum-insights";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { currentUser, supabaseUser } from "@/lib/supabase/server";
@@ -27,8 +29,9 @@ export async function createThread(_: FormState, f: FormData): Promise<FormState
   const sb = await supabaseUser();
   const { data: thread, error } = await sb.from("forum_threads").insert({ board_id: str(f, "board"), author_id: user.id, title: title.data }).select("id").single();
   if (error || !thread) return { message: dbError(error?.message ?? "") };
-  const { error: postError } = await sb.from("forum_posts").insert({ thread_id: thread.id, author_id: user.id, body: body.data });
-  if (postError) return { message: dbError(postError.message) };
+  const { data: post, error: postError } = await sb.from("forum_posts").insert({ thread_id: thread.id, author_id: user.id, body: body.data }).select("id").single();
+  if (postError || !post) return { message: dbError(postError?.message ?? "") };
+  after(() => classifyPost(post.id)); // KI liest den Beitrag nach der Antwort, der Nutzer wartet nicht
   redirect(`/forum/thema/${thread.id}`);
 }
 
@@ -41,8 +44,9 @@ export async function reply(_: FormState, f: FormData): Promise<FormState> {
   if (!body.success) return { message: body.error.issues[0].message };
   if (!Number.isInteger(threadId)) return { message: "Unbekanntes Thema." };
   const sb = await supabaseUser();
-  const { error } = await sb.from("forum_posts").insert({ thread_id: threadId, author_id: user.id, body: body.data });
-  if (error) return { message: dbError(error.message) };
+  const { data: post, error } = await sb.from("forum_posts").insert({ thread_id: threadId, author_id: user.id, body: body.data }).select("id").single();
+  if (error || !post) return { message: dbError(error?.message ?? "") };
+  after(() => classifyPost(post.id));
   revalidatePath(`/forum/thema/${threadId}`);
   return { ok: true, message: "Antwort veröffentlicht." };
 }

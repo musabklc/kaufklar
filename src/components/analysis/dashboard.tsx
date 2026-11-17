@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { AlertTriangle, BookOpen, CheckCircle2, ChevronDown, Info, Printer, Sparkles, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { buildAnalysis } from "@/lib/analysis/engine";
 import { saveAnalysis, useChecked } from "@/lib/storage";
 import type { AnalysisResult, Comp, Finding, WeakPoint } from "@/lib/types";
+import type { ForumInsight } from "@/lib/analysis/forum-insights";
 import { CompsInput } from "@/components/intake/comps-input";
 import { ProvenanceBadge } from "./provenance";
 import { CostsSection } from "./costs-section";
@@ -23,6 +25,7 @@ import { CopyButton, LevelPill, PriceGauge, RiskGauge, ScoreBar, Section, VERDIC
 const NAV = [
   ["uebersicht", "Übersicht"],
   ["schwachstellen", "Schwachstellen"],
+  ["forum", "Forum"],
   ["inserat", "Inserat-Check"],
   ["rueckrufe", "Rückrufe"],
   ["preis", "Preis"],
@@ -50,7 +53,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
 
   function updateComps(user: number[]) {
     const comps: Comp[] = [...r.price.comps.filter((c) => c.source !== "nutzer"), ...user.map((price) => ({ price, source: "nutzer" as const }))];
-    const next = buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) });
+    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum };
     saveAnalysis(next); // Speicher-Hook rendert die Seite mit den neuen Werten
   }
 
@@ -92,6 +95,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         <PriceCheck r={r} />
         <Overview r={r} />
         <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} />
+        <ForumSection items={r.forum ?? []} vehicle={r.vehicle} />
         <Findings items={r.findings} />
         <RecallsSection r={r} />
         <PriceSection r={r} onComps={updateComps} />
@@ -289,6 +293,56 @@ function WeakPoints({ items, knowledge }: { items: WeakPoint[]; knowledge: Analy
   );
 }
 
+function ForumSection({ items, vehicle }: { items: ForumInsight[]; vehicle: Vehicle }) {
+  const weak = items.filter((i) => i.kind === "schwachstelle");
+  const plus = items.filter((i) => i.kind === "pluspunkt");
+  const car = [vehicle.make, vehicle.model].filter(Boolean).join(" ");
+  const column = (title: string, list: ForumInsight[], icon: React.ReactNode, empty: string) => (
+    <div>
+      <h3 className="flex items-center gap-2 font-semibold">{icon} {title}</h3>
+      {list.length ? (
+        <ul className="mt-3 space-y-3">
+          {list.map((i) => (
+            <li key={i.title} className="rounded-2xl bg-muted/60 p-4">
+              <p className="font-medium">{i.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {i.people} {i.people === 1 ? "Erfahrungsbericht" : "Erfahrungsberichte"} · {i.component}
+                {i.typicalKm ? ` · um ${fmt(i.typicalKm)} km` : ""}
+                {i.medianCost ? ` · ca. ${fmt(i.medianCost)} €` : ""}
+              </p>
+              <p className="mt-2 flex flex-wrap gap-x-3 text-sm">
+                {i.posts.map((p, n) => (
+                  <Link key={p.postId} href={`/forum/thema/${p.threadId}#b${p.postId}`} className="font-medium text-brand underline-offset-4 hover:underline">
+                    Beitrag {n + 1} lesen
+                  </Link>
+                ))}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">{empty}</p>
+      )}
+    </div>
+  );
+  return (
+    <Section id="forum" eyebrow="Community" title="Aus dem Forum">
+      {items.length ? (
+        <div className="grid gap-6 md:grid-cols-2 *:min-w-0">
+          {column("Schwachstellen", weak, <AlertTriangle className="size-4 text-warn" />, "Keine Probleme gemeldet.")}
+          {column("Pluspunkte", plus, <CheckCircle2 className="size-4 text-ok" />, "Noch keine positiven Erfahrungen berichtet.")}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">Im Forum hat noch niemand über {car || "dieses Modell"} berichtet.</p>
+      )}
+      <p className="mt-5 text-sm text-muted-foreground">
+        Automatisch von einer KI aus Forumsbeiträgen gelesen; Einzelerfahrungen, keine Statistik.{" "}
+        <Link href="/forum" className="font-medium text-brand underline-offset-4 hover:underline">Fährst du so ein Auto? Erzähl im Forum davon.</Link>
+      </p>
+    </Section>
+  );
+}
+
 const STATUS: Record<Finding["status"], { label: string; icon: typeof CheckCircle2; cls: string }> = {
   bestaetigt: { label: "Tatsache", icon: CheckCircle2, cls: "text-foreground" },
   verdacht: { label: "Verdachtsmoment", icon: AlertTriangle, cls: "text-warn" },
@@ -341,7 +395,7 @@ function EditVehicle({ r }: { r: AnalysisResult }) {
             size="lg"
             className="mt-5 h-12 px-6 text-base"
             onClick={() => {
-              saveAnalysis(buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }));
+              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum });
               setOpen(false);
             }}
           >

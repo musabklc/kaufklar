@@ -44,6 +44,9 @@ export default function Datenschutz() {
       <h3>Künstliche Intelligenz (Google Gemini)</h3>
       <p>
         Zum Auslesen von Screenshots, zur Prüfung des Inserats und zur Moderation von Meldungen werden Texte und Bilder an die Gemini-API von Google übermittelt.
+        Außerdem liest die KI jeden Forumsbeitrag (Text, Thementitel, Unterforum und das im Profil angegebene Auto, ohne Benutzername oder E-Mail) und zieht
+        Erfahrungen zu Schwachstellen und Pluspunkten eines Modells heraus; diese erscheinen in Fahrzeuganalysen unter „Aus dem Forum“ mit Link zum Beitrag
+        (berechtigtes Interesse, Art. 6 Abs. 1 lit. f DSGVO: Erfahrungen der Community für andere Käufer nutzbar machen). Löschst du einen Beitrag, verschwinden auch diese Erkenntnisse.
         Wir nutzen den kostenpflichtigen Tarif. Laut den Nutzungsbedingungen verwendet Google die übermittelten Inhalte in diesem Tarif nicht zur Verbesserung seiner
         Produkte; sie werden nur für begrenzte Zeit zur Missbrauchserkennung gespeichert. Für die Schwachstellen recherchiert die KI zusätzlich über die Google-Suche –
         dabei werden nur Fahrzeugmerkmale (Marke, Modell, Baujahr, Motor) als Suchbegriffe verwendet.

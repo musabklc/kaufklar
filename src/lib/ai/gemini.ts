@@ -1,9 +1,9 @@
 import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
-import { AiAuditSchema, ExtractionSchema, ModerationSchema, type ReportInput, type Vehicle } from "../types";
-import { AiError, webSearchEnabled, type AiProvider, type ImageInput } from "./provider";
-import { AUDIT_SYSTEM, EXTRACT_SYSTEM, MODERATE_SYSTEM } from "./prompts";
+import { AiAuditSchema, ExtractionSchema, ForumInsightsSchema, ModerationSchema, type ReportInput, type Vehicle } from "../types";
+import { AiError, webSearchEnabled, type AiProvider, type ForumPostInput, type ImageInput } from "./provider";
+import { AUDIT_SYSTEM, EXTRACT_SYSTEM, FORUM_SYSTEM, MODERATE_SYSTEM } from "./prompts";
 import { parseLenient, toGeminiSchema } from "./schema";
 
 /**
@@ -118,6 +118,17 @@ export class GeminiProvider implements AiProvider {
       { type: "text", text: `<wissensdatenbank>\n${knowledgeSummary || "Keine Treffer in der Datenbank."}\n</wissensdatenbank>` },
       ...this.images(images),
     ], webSearchEnabled()); // mit Google-Recherche zu Schwachstellen dieses Modells
+  }
+
+  forumInsights(p: ForumPostInput) {
+    return this.json(ForumInsightsSchema, FORUM_SYSTEM, [{ type: "text", text: `<kontext>
+Unterforum: ${p.board}
+Thema: ${p.threadTitle}
+Auto des Verfassers (Profil): ${p.authorCar ?? "nicht angegeben"}
+</kontext>
+<beitrag>
+${p.body}
+</beitrag>` }]);
   }
 
   moderate(r: ReportInput) {
