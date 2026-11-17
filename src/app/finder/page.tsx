@@ -1,6 +1,7 @@
 import { FinderForm } from "./finder-form";
 
 export const metadata = {
+  alternates: { canonical: "/finder" },
   title: "Auto-Finder: Welches Auto passt zu mir? – Tachoklar",
   description: "Budget, Fahrprofil und Wünsche eingeben: passende Gebrauchtwagen mit zuverlässigen Motoren, typischen Schwachstellen und echten Marktpreisen.",
 };

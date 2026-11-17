@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { ActionForm, labelCls } from "@/components/forum/action-form";
 import { setNewPassword } from "../actions";
 
-export const metadata = { title: "Neues Passwort – Tachoklar" };
+export const metadata = { title: "Neues Passwort – Tachoklar", robots: { index: false } };
 
 export default function NeuesPasswort() {
   return (

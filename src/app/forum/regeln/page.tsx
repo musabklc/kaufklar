@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Forenregeln – Tachoklar" };
+export const metadata = { title: "Forenregeln – Tachoklar", description: "Regeln für das Tachoklar-Forum: sachlich bleiben, keine Werbung, keine persönlichen Daten.", alternates: { canonical: "/forum/regeln" } };
 
 export default function Regeln() {
   return (

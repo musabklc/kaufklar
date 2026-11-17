@@ -4,6 +4,7 @@ import { KNOWLEDGE } from "@/lib/analysis/knowledge";
 export const metadata = {
   title: "Schwachstellen von Motoren und Getrieben – Tachoklar",
   description: "Bekannte Probleme gängiger Gebrauchtwagen-Motoren und -Getriebe mit Reparaturkosten und Prüftipps: BMW N47, VW EA189, DSG DQ200, PureTech und mehr.",
+  alternates: { canonical: "/schwachstellen" },
 };
 
 export default function SchwachstellenPage() {

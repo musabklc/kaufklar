@@ -29,6 +29,8 @@ const CLS_COMPS = [
   { title: "CLS 500 Facelift, LPG-Anlage", detail: "2008 · Privat", price: "7.999 €" },
 ];
 
+export const metadata = { alternates: { canonical: "/" } };
+
 export default function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return (
     <>

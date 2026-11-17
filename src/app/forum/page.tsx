@@ -5,7 +5,7 @@ import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
 import { SearchForm } from "@/components/forum/search-form";
 import { profileFlags, serviceDb } from "@/lib/server/forum-admin";
 
-export const metadata = { title: "Forum – Tachoklar", description: "Austausch unter Gebrauchtwagen-Käufern und -Fahrern: Kaufberatung, Inserat-Check, Erfahrungen, Unterforen je Marke." };
+export const metadata = { title: "Forum – Tachoklar", description: "Austausch unter Gebrauchtwagen-Käufern und -Fahrern: Kaufberatung, Inserat-Check, Erfahrungen, Unterforen je Marke.", alternates: { canonical: "/forum" } };
 
 export default function ForumPage() {
   return (

@@ -4,6 +4,7 @@ import { Host_Grotesk } from "next/font/google";
 import Link from "next/link";
 import { Toaster } from "@/components/ui/sonner";
 import { Logo } from "@/components/logo";
+import { JsonLd } from "@/components/json-ld";
 import "./globals.css";
 
 // Host Grotesk: ruhig und präzise, eine Familie für alles.
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Tachoklar – KI-Kaufberater für Gebrauchtwagen",
   description: "Inserat einfügen, Risiken erkennen, fair verhandeln. Unabhängige Analyse für Gebrauchtwagen in Deutschland.",
+  openGraph: { siteName: "Tachoklar", locale: "de_DE", type: "website" },
 };
 
 export const viewport: Viewport = { themeColor: "#eef0f3", width: "device-width", initialScale: 1 };
@@ -62,6 +64,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </p>
           </div>
         </footer>
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@graph": [
+              { "@type": "Organization", "@id": `${SITE_URL}/#org`, name: "Tachoklar", url: SITE_URL, logo: `${SITE_URL}/apple-icon` },
+              { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: "Tachoklar", url: SITE_URL, inLanguage: "de-DE", publisher: { "@id": `${SITE_URL}/#org` } },
+            ],
+          }}
+        />
         <Toaster position="top-center" />
       </body>
     </html>

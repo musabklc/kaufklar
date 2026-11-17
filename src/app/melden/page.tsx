@@ -1,6 +1,6 @@
 import { ReportForm } from "@/components/community/report-form";
 
-export const metadata = { title: "Problem melden – Tachoklar" };
+export const metadata = { title: "Problem melden – Tachoklar", description: "Hattest du ein Problem mit deinem Auto? Melde es anonym – geprüfte Meldungen fließen in die Tachoklar-Analysen ein.", alternates: { canonical: "/melden" } };
 
 export default function MeldenPage() {
   return (

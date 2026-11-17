@@ -11,14 +11,25 @@ import { deletePost, editPost, reply, reportPost, toggleHelpful } from "../../ac
 import { PhotoInput } from "@/components/forum/photo-input";
 import { forumImageUrl } from "@/lib/forum";
 import { ThumbsUp } from "lucide-react";
+import { JsonLd } from "@/components/json-ld";
+import { SITE_URL } from "@/lib/site";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   await connection(); // Titel zur Anfragezeit, ohne Sitzung
   const id = Number((await params).id);
   if (!forumEnabled() || !Number.isInteger(id)) return {};
   const sb = supabasePublic();
-  const { data } = await sb.from("forum_threads").select("title").eq("id", id).maybeSingle();
-  return data ? { title: `${data.title} – Forum – Tachoklar` } : {};
+  const [{ data }, { data: first }] = await Promise.all([
+    sb.from("forum_threads").select("title").eq("id", id).maybeSingle(),
+    sb.from("forum_posts").select("body").eq("thread_id", id).eq("hidden", false).order("created_at").limit(1).maybeSingle(),
+  ]);
+  if (!data) return {};
+  const text = (first?.body ?? "").replace(/\s+/g, " ").trim();
+  return {
+    title: `${data.title} – Forum – Tachoklar`,
+    description: text ? (text.length > 155 ? `${text.slice(0, 152)}…` : text) : `Diskussion im Tachoklar-Forum: ${data.title}`,
+    alternates: { canonical: `/forum/thema/${id}` },
+  };
 }
 
 export default function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
@@ -56,6 +67,7 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
     <>
       {board && <Link href={`/forum/${board.id}`} className="text-sm font-medium text-brand">← {board.title}</Link>}
       <h1 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-balance sm:text-4xl">{thread.title}</h1>
+      <ThreadJsonLd id={id} title={thread.title} posts={(posts ?? []).filter((p) => !p.hidden)} />
 
       <ol className="mt-8 space-y-4">
         {(posts ?? []).map((p) => {
@@ -147,5 +159,29 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
         )}
       </section>
     </>
+  );
+}
+
+type LdPost = { body: string; created_at: string; edited_at: string | null; author: unknown };
+/** Strukturierte Daten (schema.org DiscussionForumPosting), damit Suchmaschinen Thema und Antworten als Forumsdiskussion erkennen. */
+function ThreadJsonLd({ id, title, posts }: { id: number; title: string; posts: LdPost[] }) {
+  const [first, ...rest] = posts;
+  if (!first) return null;
+  const person = (p: LdPost) => ({ "@type": "Person", name: (p.author as Author)?.username ?? "gelöschtes Konto" });
+  return (
+    <JsonLd
+      data={{
+        "@context": "https://schema.org",
+        "@type": "DiscussionForumPosting",
+        headline: title,
+        url: `${SITE_URL}/forum/thema/${id}`,
+        text: first.body.slice(0, 3000),
+        datePublished: first.created_at,
+        ...(first.edited_at ? { dateModified: first.edited_at } : {}),
+        author: person(first),
+        interactionStatistic: { "@type": "InteractionCounter", interactionType: "https://schema.org/CommentAction", userInteractionCount: rest.length },
+        comment: rest.slice(0, 50).map((p) => ({ "@type": "Comment", text: p.body.slice(0, 2000), datePublished: p.created_at, author: person(p) })),
+      }}
+    />
   );
 }

@@ -1,6 +1,7 @@
 import { WertForm } from "./wert-form";
 
 export const metadata = {
+  alternates: { canonical: "/wert" },
   title: "Was ist mein Auto wert? – Tachoklar",
   description: "Kostenlose Auto-Bewertung aus echten, geprüften Angeboten: realistischer Privatverkaufspreis und was ein Händler zahlt.",
 };

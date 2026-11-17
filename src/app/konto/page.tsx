@@ -10,7 +10,7 @@ import { AvatarUpload } from "@/components/forum/avatar-upload";
 import { deleteAccount, removeAvatar, requestReset, setNotifyReplies, signIn, signOut, signUp, updateCar, uploadAvatar } from "./actions";
 import { profileFlags } from "@/lib/server/forum-admin";
 
-export const metadata = { title: "Konto – Tachoklar" };
+export const metadata = { title: "Konto – Tachoklar", robots: { index: false } };
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
 

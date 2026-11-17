@@ -1,4 +1,4 @@
-export const metadata = { title: "Impressum – Tachoklar" };
+export const metadata = { title: "Impressum – Tachoklar", alternates: { canonical: "/impressum" } };
 
 export default function Impressum() {
   return (

@@ -15,9 +15,9 @@ type SP = Promise<Record<string, string | string[] | undefined>>;
 export async function generateMetadata({ params }: { params: Promise<{ board: string }> }) {
   await connection(); // Titel zur Anfragezeit, ohne Sitzung
   if (!forumEnabled()) return {};
-  const sb = supabasePublic();
-  const { data } = await sb.from("forum_boards").select("title, description").eq("id", (await params).board).maybeSingle();
-  return data ? { title: `${data.title} – Forum – Tachoklar`, description: data.description || `Erfahrungen und Fragen rund um ${data.title} im Tachoklar-Forum.` } : {};
+  const { board } = await params;
+  const { data } = await supabasePublic().from("forum_boards").select("title, description").eq("id", board).maybeSingle();
+  return data ? { title: `${data.title} – Forum – Tachoklar`, description: data.description || `Erfahrungen und Fragen rund um ${data.title} im Tachoklar-Forum.`, alternates: { canonical: `/forum/${board}` } } : {};
 }
 const one = (x: string | string[] | undefined, max: number) => (typeof x === "string" ? x.slice(0, max) : "");
 

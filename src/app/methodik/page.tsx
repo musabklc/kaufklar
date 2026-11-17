@@ -1,7 +1,7 @@
 import { KNOWLEDGE } from "@/lib/analysis/knowledge";
 import { ProvenanceLegend } from "@/components/analysis/provenance";
 
-export const metadata = { title: "Methodik & Quellen – Tachoklar" };
+export const metadata = { title: "Methodik & Quellen – Tachoklar", description: "Wie Tachoklar Gebrauchtwagen bewertet: Wissensdatenbank, Regelprüfung, KI, Marktpreise aus geprüften Angeboten, EU-Typdaten und Rückrufe.", alternates: { canonical: "/methodik" } };
 
 export default function Methodik() {
   return (

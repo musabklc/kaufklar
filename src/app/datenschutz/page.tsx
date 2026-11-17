@@ -1,4 +1,4 @@
-export const metadata = { title: "Datenschutz – Tachoklar" };
+export const metadata = { title: "Datenschutz – Tachoklar", alternates: { canonical: "/datenschutz" } };
 
 const A = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <a className="text-brand underline underline-offset-4" href={href} target="_blank" rel="noopener noreferrer">{children}</a>
