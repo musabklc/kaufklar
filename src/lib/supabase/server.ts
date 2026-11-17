@@ -2,12 +2,14 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export const forumEnabled = () => Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+// Publishable Key ist öffentlich; Vercel-Variable heißt ohne NEXT_PUBLIC_-Präfix, wird nur serverseitig gelesen
+const publishableKey = () => process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY;
+export const forumEnabled = () => Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && publishableKey());
 
 /** Supabase mit der Sitzung des Besuchers (Publishable Key + RLS). Pro Anfrage neu erzeugen. */
 export async function supabaseUser() {
   const store = await cookies();
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, publishableKey()!, {
     cookies: {
       getAll: () => store.getAll(),
       setAll(list) {

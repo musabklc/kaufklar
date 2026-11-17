@@ -4,8 +4,9 @@ import { NextResponse, type NextRequest } from "next/server";
 /** Erneuert die Forum-Sitzung (Supabase Auth) bei jeder Anfrage auf Forum- und Konto-Seiten. */
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) return response;
-  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !key) return response;
+  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(list, headers) {
