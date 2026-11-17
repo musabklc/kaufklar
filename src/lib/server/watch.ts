@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { checkListing } from "./link";
-import { sendMail } from "./mail";
+import { mailEnabled, sendMail } from "./mail";
 import { watchEvent } from "../analysis/watch";
 
 const db = () =>
@@ -15,7 +15,8 @@ const FOOTER = "Du bekommst diese E-Mail, weil du für dieses Auto bei Tachoklar
 /** Täglicher Preisalarm: die am längsten nicht geprüften gemerkten Inserate öffnen, bei Preissenkung oder Löschung mailen. */
 export async function runWatch(limit = 20) {
   const sb = db();
-  if (!sb) return { checked: 0, mails: 0 };
+  // Ohne Mail-Versand nichts prüfen: sonst würde eine Preissenkung als "gesehen" gespeichert, ohne dass jemand davon erfährt
+  if (!sb || !mailEnabled()) return { checked: 0, mails: 0 };
   const { data: rows } = await sb
     .from("saved_analyses")
     .select("id, user_id, title, listing_url, price_eur, last_price")

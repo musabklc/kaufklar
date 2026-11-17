@@ -65,6 +65,72 @@ export const ForumInsightsSchema = z.object({
     .describe("leer, wenn der Beitrag keine eigene Erfahrung zu einem bestimmten Modell enthält"),
 });
 export type ForumInsights = z.infer<typeof ForumInsightsSchema>;
+
+/** Auto-Finder: Wünsche des Käufers. */
+export const FinderInputSchema = z.object({
+  budget: z.number().int().min(1000).max(150000),
+  yearlyKm: z.enum(["unter 10.000", "10.000–20.000", "über 20.000"]),
+  usage: z.enum(["Stadt", "Land", "Autobahn", "gemischt"]),
+  size: z.enum(["Kleinwagen", "Kompakt", "Kombi", "SUV", "Van / 7 Sitze", "Limousine", "Sportlich / Coupé", "Cabrio"]),
+  fuel: z.enum(["egal", "Benzin", "Diesel", "Hybrid", "Elektro"]),
+  gearbox: z.enum(["egal", "Schaltgetriebe", "Automatik"]),
+  priorities: z.array(z.enum(["zuverlässig", "günstig im Unterhalt", "sparsam", "komfortabel", "sportlich", "viel Platz", "modern / Assistenzsysteme"])).max(4),
+  notes: z.string().max(300),
+});
+export type FinderInput = z.infer<typeof FinderInputSchema>;
+
+/** Auto-Finder: Vorschläge der KI (ohne Preise – die kommen aus echten Angeboten). */
+export const FinderSchema = z.object({
+  intro: z.string().describe("2 Sätze: worauf es bei diesen Wünschen ankommt, Du-Form"),
+  cars: z
+    .array(
+      z.object({
+        make: z.string().describe("Marke wie in Inseraten, z. B. Toyota"),
+        model: z.string().describe("Baureihe, z. B. Auris, Golf, 3er"),
+        generation: z.string().describe("Generation mit Baujahren, z. B. 'Golf VII (2013–2019)'"),
+        firstYear: z.number().describe("realistisches Baujahr im Budget, z. B. 2016"),
+        engine: z.string().describe("empfohlene Motorisierung, z. B. '1.8 Hybrid' oder '2.0 TDI 150 PS'"),
+        fuel: z.enum(["Benzin", "Diesel", "Hybrid", "Elektro", "LPG"]),
+        why: z.string().describe("2 Sätze, warum es zu den Wünschen passt"),
+        watchOut: z.array(z.string()).describe("2–3 konkrete Dinge, auf die man bei genau diesem Modell achten muss"),
+        avoid: z.string().nullable().describe("Motor/Getriebe dieses Modells, den man lieber meidet, oder null"),
+      }),
+    )
+    .describe("4–5 Vorschläge, der passendste zuerst"),
+});
+export type Finder = z.infer<typeof FinderSchema>;
+
+/** Besichtigung: KI-Bewertung der Fotos, die der Käufer vor Ort macht. */
+export const InspectionSchema = z.object({
+  items: z.array(
+    z.object({
+      photo: z.number().describe("Nummer des Bildes (1-basiert)"),
+      area: z.string().describe("was zu sehen ist, z. B. 'Reifen vorne links'"),
+      verdict: z.enum(["ok", "auffällig", "kritisch", "nicht beurteilbar"]),
+      finding: z.string().describe("konkreter Befund in 1–2 Sätzen, nur was auf dem Bild wirklich zu sehen ist"),
+      costMinEur: z.number().nullable(),
+      costMaxEur: z.number().nullable(),
+    }),
+  ),
+  summary: z.string().describe("2–3 Sätze Gesamteindruck, Du-Form"),
+  negotiationEur: z.number().nullable().describe("vernünftiger Preisabschlag in Euro wegen der Befunde, oder null"),
+});
+export type Inspection = z.infer<typeof InspectionSchema>;
+
+/** Scheckheft: von der KI abgelesene Einträge (die Plausibilität rechnet Tachoklar selbst). */
+export const ServiceBookSchema = z.object({
+  entries: z.array(
+    z.object({
+      date: z.string().describe("Datum des Eintrags als MM/JJJJ"),
+      km: z.number().nullable().describe("Kilometerstand des Eintrags"),
+      work: z.string().describe("was gemacht wurde, kurz, z. B. 'Inspektion mit Ölwechsel', 'Zahnriemen'"),
+      workshop: z.string().nullable().describe("Werkstatt (Name/Ort), falls lesbar"),
+    }),
+  ),
+  readability: z.enum(["gut", "teilweise", "schlecht"]),
+  remarks: z.string().describe("Auffälligkeiten beim Lesen (unterschiedliche Stempel, Korrekturen, fehlende Seiten), sonst leer"),
+});
+export type ServiceBook = z.infer<typeof ServiceBookSchema>;
 export type ReportInput = { make: string; model: string; engineCode: string | null; year: number | null; component: string; description: string };
 
 export const Level = z.enum(["niedrig", "mittel", "hoch"]);
@@ -214,4 +280,8 @@ export type AnalysisResult = {
   community: import("./analysis/community").CommunityIssue[];
   /** Erfahrungen aus dem Forum (KI-ausgelesen, mit Link zum Beitrag); fehlt bei älteren gespeicherten Analysen. */
   forum?: import("./analysis/forum-insights").ForumInsight[];
+  /** Ergebnis der Foto-Besichtigung vor Ort (nur im Browser gespeichert, Fotos nicht). */
+  inspection?: Inspection & { at: string; labels: string[] };
+  /** Abgelesenes Scheckheft mit Plausibilitätsprüfung. */
+  serviceBook?: ServiceBook & { at: string; checks: import("./analysis/servicebook").ServiceCheck[] };
 };

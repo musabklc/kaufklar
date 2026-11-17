@@ -1,4 +1,4 @@
-import type { AiAudit, Extraction, ForumInsights, Moderation, ReportInput, Vehicle } from "../types";
+import type { AiAudit, Extraction, Finder, FinderInput, ForumInsights, Inspection, Moderation, ReportInput, ServiceBook, Vehicle } from "../types";
 
 export type ForumPostInput = { board: string; threadTitle: string; authorCar: string | null; body: string };
 
@@ -14,6 +14,12 @@ export interface AiProvider {
   moderate(report: ReportInput): Promise<Moderation>;
   /** Erfahrungen (Schwachstellen/Pluspunkte) aus einem Forumsbeitrag herauslesen. */
   forumInsights(post: ForumPostInput): Promise<ForumInsights>;
+  /** Auto-Finder: passende Modelle zu Budget und Wünschen. */
+  finder(input: FinderInput): Promise<Finder>;
+  /** Besichtigung: Fotos vom Auto bewerten. */
+  inspect(input: { vehicle: Vehicle; images: ImageInput[]; labels: string[] }): Promise<Inspection>;
+  /** Scheckheft-Fotos ablesen. */
+  serviceBook(input: { vehicle: Vehicle; images: ImageInput[] }): Promise<ServiceBook>;
   /** Optional: Vergleichsangebote per Websuche (kostenpflichtige Tarife). */
 }
 

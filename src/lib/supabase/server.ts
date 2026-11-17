@@ -1,5 +1,6 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 // Publishable Key ist öffentlich; Vercel-Variable heißt ohne NEXT_PUBLIC_-Präfix, wird nur serverseitig gelesen
@@ -20,6 +21,11 @@ export async function supabaseUser() {
       },
     },
   });
+}
+
+/** Ohne Sitzung (nur öffentliche Daten), z. B. für Seitentitel – Cookies dort zu lesen bricht nach Server-Actions. */
+export function supabasePublic() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, publishableKey()!, { auth: { persistSession: false } });
 }
 
 /** Angemeldeter Nutzer, Token serverseitig geprüft (getClaims), oder null. */

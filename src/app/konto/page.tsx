@@ -89,6 +89,7 @@ function Account({ username, email, car, avatarPath, notify }: { username: strin
       </div>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/forum" className="inline-flex h-11 items-center rounded-full bg-primary px-6 font-medium text-primary-foreground">Zum Forum</Link>
+        <Link href="/garage" className="inline-flex h-11 items-center rounded-full border border-input bg-card px-6 font-medium hover:bg-muted">Meine Garage</Link>
         <form action={signOut}>
           <Button type="submit" variant="outline" size="lg" className="h-11 px-6">Abmelden</Button>
         </form>

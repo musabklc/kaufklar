@@ -6,6 +6,7 @@ import { classifyPost } from "@/lib/server/forum-insights";
 import { isBanned, notifyReply, profileFlags, serviceDb } from "@/lib/server/forum-admin";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { sniff } from "@/lib/guards";
 import { currentUser, supabaseUser } from "@/lib/supabase/server";
 import type { FormState } from "../konto/actions";
 
@@ -28,6 +29,39 @@ async function writer(): Promise<{ user: NonNullable<Awaited<ReturnType<typeof a
   return { user };
 }
 
+// ---------- Fotos in Beiträgen ----------
+const PHOTO_MAX = 1_500_000;
+type Photo = { bytes: Uint8Array; type: "image/jpeg" | "image/webp" };
+
+/** Fotos prüfen, bevor etwas gespeichert wird: max. 3, je 1,5 MB, echte JPEG/WebP-Signatur. */
+async function readPhotos(f: FormData): Promise<Photo[] | string> {
+  const files = f.getAll("photos").filter((x): x is File => x instanceof File && x.size > 0);
+  if (files.length > 3) return "Höchstens 3 Fotos.";
+  const out: Photo[] = [];
+  for (const file of files) {
+    if (file.size > PHOTO_MAX) return "Ein Foto ist zu groß.";
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const type = sniff(bytes);
+    if (type !== "image/jpeg" && type !== "image/webp") return "Bitte nur Fotos (JPG, PNG oder WebP).";
+    out.push({ bytes, type });
+  }
+  return out;
+}
+
+/** Fotos in den eigenen Ordner laden und am Beitrag vermerken. Fehler: Beitrag bleibt, nur ohne Fotos. */
+async function attachPhotos(sb: Awaited<ReturnType<typeof supabaseUser>>, userId: string, postId: number, photos: Photo[]) {
+  if (!photos.length) return true;
+  const paths: string[] = [];
+  for (const [i, p] of photos.entries()) {
+    const path = `${userId}/${postId}-${i}.${p.type === "image/webp" ? "webp" : "jpg"}`;
+    const { error } = await sb.storage.from("forum").upload(path, p.bytes, { contentType: p.type, cacheControl: "31536000", upsert: false });
+    if (!error) paths.push(path);
+  }
+  if (!paths.length) return false;
+  const { error } = await sb.from("forum_posts").update({ image_paths: paths }).eq("id", postId);
+  return !error;
+}
+
 export async function createThread(_: FormState, f: FormData): Promise<FormState> {
   if (str(f, "website")) return {};
   const w = await writer();
@@ -37,11 +71,14 @@ export async function createThread(_: FormState, f: FormData): Promise<FormState
   const body = Body.safeParse(str(f, "body"));
   if (!title.success) return { message: title.error.issues[0].message };
   if (!body.success) return { message: body.error.issues[0].message };
+  const photos = await readPhotos(f);
+  if (typeof photos === "string") return { message: photos };
   const sb = await supabaseUser();
   const { data: thread, error } = await sb.from("forum_threads").insert({ board_id: str(f, "board"), author_id: user.id, title: title.data }).select("id").single();
   if (error || !thread) return { message: dbError(error?.message ?? "") };
   const { data: post, error: postError } = await sb.from("forum_posts").insert({ thread_id: thread.id, author_id: user.id, body: body.data }).select("id").single();
   if (postError || !post) return { message: dbError(postError?.message ?? "") };
+  await attachPhotos(sb, user.id, post.id, photos);
   after(() => classifyPost(post.id)); // KI liest den Beitrag nach der Antwort, der Nutzer wartet nicht
   redirect(`/forum/thema/${thread.id}`);
 }
@@ -55,15 +92,48 @@ export async function reply(_: FormState, f: FormData): Promise<FormState> {
   const threadId = Number(str(f, "thread"));
   if (!body.success) return { message: body.error.issues[0].message };
   if (!Number.isInteger(threadId)) return { message: "Unbekanntes Thema." };
+  const photos = await readPhotos(f);
+  if (typeof photos === "string") return { message: photos };
   const sb = await supabaseUser();
   const { data: post, error } = await sb.from("forum_posts").insert({ thread_id: threadId, author_id: user.id, body: body.data }).select("id").single();
   if (error || !post) return { message: dbError(error?.message ?? "") };
+  const photosOk = await attachPhotos(sb, user.id, post.id, photos);
   after(async () => {
     await classifyPost(post.id);
     await notifyReply(threadId, user.id);
   });
   revalidatePath(`/forum/thema/${threadId}`);
-  return { ok: true, message: "Antwort veröffentlicht." };
+  return { ok: true, message: photosOk ? "Antwort veröffentlicht." : "Antwort veröffentlicht, die Fotos konnten aber nicht gespeichert werden." };
+}
+
+/** Eigenen Beitrag bearbeiten (RLS: nur der eigene). Die KI liest ihn danach neu. */
+export async function editPost(_: FormState, f: FormData): Promise<FormState> {
+  const w = await writer();
+  if ("message" in w) return { message: w.message };
+  const body = Body.safeParse(str(f, "body"));
+  const id = Number(str(f, "post"));
+  const threadId = Number(str(f, "thread"));
+  if (!body.success) return { message: body.error.issues[0].message };
+  if (!Number.isInteger(id)) return { message: "Unbekannter Beitrag." };
+  const sb = await supabaseUser();
+  const { data, error } = await sb.from("forum_posts").update({ body: body.data, edited_at: new Date().toISOString() }).eq("id", id).eq("author_id", w.user.id).select("id");
+  if (error || !data?.length) return { message: "Speichern hat nicht geklappt." };
+  after(() => classifyPost(id));
+  revalidatePath(`/forum/thema/${threadId}`);
+  return { ok: true, message: "Gespeichert." };
+}
+
+/** Fremden Beitrag als hilfreich markieren oder die Markierung zurücknehmen. */
+export async function toggleHelpful(f: FormData) {
+  const w = await writer();
+  if ("message" in w) return;
+  const id = Number(str(f, "post"));
+  const threadId = Number(str(f, "thread"));
+  if (!Number.isInteger(id)) return;
+  const sb = await supabaseUser();
+  const { data } = await sb.from("forum_helpful").delete().eq("post_id", id).eq("user_id", w.user.id).select("post_id");
+  if (!data?.length) await sb.from("forum_helpful").insert({ post_id: id });
+  revalidatePath(`/forum/thema/${threadId}`);
 }
 
 /** Eigenen Beitrag löschen; RLS erlaubt nur den eigenen. */
@@ -72,7 +142,11 @@ export async function deletePost(f: FormData) {
   const threadId = Number(str(f, "thread"));
   const sb = await supabaseUser();
   const { data: thread } = await sb.from("forum_threads").select("board_id").eq("id", threadId).maybeSingle();
-  if (Number.isInteger(id)) await sb.from("forum_posts").delete().eq("id", id);
+  if (Number.isInteger(id)) {
+    const { data: gone } = await sb.from("forum_posts").delete().eq("id", id).select("image_paths");
+    const paths = gone?.[0]?.image_paths as string[] | undefined;
+    if (paths?.length) await sb.storage.from("forum").remove(paths);
+  }
   // Letzter Beitrag weg → Thema wurde per Trigger mitgelöscht, zurück ins Unterforum statt 404
   const { data: still } = await sb.from("forum_threads").select("id").eq("id", threadId).maybeSingle();
   if (!still && thread) redirect(`/forum/${thread.board_id}`);
@@ -116,7 +190,9 @@ export async function modDelete(f: FormData) {
   const db = await admin();
   const id = num(f, "post");
   if (!db || !Number.isInteger(id)) return;
-  await db.from("forum_posts").delete().eq("id", id);
+  const { data: gone } = await db.from("forum_posts").delete().eq("id", id).select("image_paths");
+  const paths = gone?.[0]?.image_paths as string[] | undefined;
+  if (paths?.length) await db.storage.from("forum").remove(paths);
   revalidatePath("/forum/moderation");
 }
 

@@ -157,6 +157,8 @@ export async function deleteAccount(_: FormState, f: FormData): Promise<FormStat
   // Profilbilder liegen im Speicher, nicht in der Tabelle – sie verschwinden nicht mit dem Konto
   const { data: files } = await sb.storage.from("avatars").list(user.id);
   if (files?.length) await sb.storage.from("avatars").remove(files.map((x) => `${user.id}/${x.name}`));
+  const { data: photos } = await sb.storage.from("forum").list(user.id, { limit: 1000 });
+  if (photos?.length) await sb.storage.from("forum").remove(photos.map((x) => `${user.id}/${x.name}`));
   const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
   await sb.auth.signOut({ scope: "global" }); // alle Sitzungen beenden, bevor das Konto verschwindet
   const { error: delError } = await admin.auth.admin.deleteUser(user.id);

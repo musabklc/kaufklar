@@ -6,13 +6,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ActionForm, labelCls } from "@/components/forum/action-form";
 import { Avatar } from "@/components/forum/avatar";
-import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
-import { deletePost, reply, reportPost } from "../../actions";
+import { currentUser, forumEnabled, supabasePublic, supabaseUser } from "@/lib/supabase/server";
+import { deletePost, editPost, reply, reportPost, toggleHelpful } from "../../actions";
+import { PhotoInput } from "@/components/forum/photo-input";
+import { forumImageUrl } from "@/lib/forum";
+import { ThumbsUp } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  await connection(); // Titel zur Anfragezeit, ohne Sitzung
   const id = Number((await params).id);
   if (!forumEnabled() || !Number.isInteger(id)) return {};
-  const sb = await supabaseUser();
+  const sb = supabasePublic();
   const { data } = await sb.from("forum_threads").select("title").eq("id", id).maybeSingle();
   return data ? { title: `${data.title} – Forum – Tachoklar` } : {};
 }
@@ -38,10 +42,15 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
   const sb = await supabaseUser();
   const [{ data: thread }, { data: posts }, user] = await Promise.all([
     sb.from("forum_threads").select("id, title, board:forum_boards(id, title)").eq("id", id).maybeSingle(),
-    sb.from("forum_posts").select("id, body, created_at, hidden, author_id, author:profiles(username, car, avatar_path)").eq("thread_id", id).order("created_at").limit(500),
+    sb.from("forum_posts").select("id, body, created_at, edited_at, hidden, author_id, image_paths, author:profiles(username, car, avatar_path)").eq("thread_id", id).order("created_at").limit(500),
     currentUser(),
   ]);
   if (!thread) notFound();
+  // "Hilfreich"-Markierungen: Anzahl je Beitrag und ob ich schon markiert habe
+  const ids = (posts ?? []).map((p) => p.id);
+  const { data: helpful } = ids.length ? await sb.from("forum_helpful").select("post_id, user_id").in("post_id", ids) : { data: [] };
+  const helpCount = (pid: number) => (helpful ?? []).filter((h) => h.post_id === pid).length;
+  const helpMine = (pid: number) => (helpful ?? []).some((h) => h.post_id === pid && h.user_id === user?.id);
   const board = thread.board as unknown as { id: string; title: string } | null;
   return (
     <>
@@ -58,19 +67,53 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
               <div className="min-w-0 text-sm text-muted-foreground">
                 <p>
                   <span className="font-semibold text-foreground">{a?.username ?? "gelöschtes Konto"}</span> · {when(p.created_at)}
+                  {p.edited_at && " · bearbeitet"}
                   {p.hidden && " · ausgeblendet (wird geprüft)"}
                 </p>
                 {a?.car && <p className="truncate">fährt {a.car}</p>}
               </div>
             </div>
             <p className="mt-3 whitespace-pre-wrap break-words leading-relaxed">{p.body}</p>
+            {(p.image_paths as string[]).length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                {(p.image_paths as string[]).map((path, n) => (
+                  <a key={path} href={forumImageUrl(path)} target="_blank" rel="noopener noreferrer" className="block">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- bereits im Browser verkleinerte Nutzerfotos */}
+                    <img src={forumImageUrl(path)} alt={`Foto ${n + 1} zum Beitrag`} loading="lazy" className="h-32 w-auto max-w-full rounded-2xl object-cover sm:h-40" />
+                  </a>
+                ))}
+              </div>
+            )}
             <div className="mt-4 flex flex-wrap items-start gap-4 text-sm">
+              {(helpCount(p.id) > 0 || (user?.username && user.id !== p.author_id)) && (
+                user?.username && user.id !== p.author_id ? (
+                  <form action={toggleHelpful}>
+                    <input type="hidden" name="post" value={p.id} />
+                    <input type="hidden" name="thread" value={id} />
+                    <button aria-pressed={helpMine(p.id)} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium ${helpMine(p.id) ? "bg-ok-soft text-ok" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                      <ThumbsUp className="size-4" /> Hilfreich{helpCount(p.id) ? ` · ${helpCount(p.id)}` : ""}
+                    </button>
+                  </form>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-muted-foreground"><ThumbsUp className="size-4" /> {helpCount(p.id)} fanden das hilfreich</span>
+                )
+              )}
               {user?.id === p.author_id ? (
-                <form action={deletePost}>
-                  <input type="hidden" name="post" value={p.id} />
-                  <input type="hidden" name="thread" value={id} />
-                  <button className="text-muted-foreground underline-offset-4 hover:text-bad hover:underline">Löschen</button>
-                </form>
+                <>
+                  <details>
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Bearbeiten</summary>
+                    <ActionForm action={editPost} submit="Speichern" variant="outline" className="mt-3 space-y-3">
+                      <input type="hidden" name="post" value={p.id} />
+                      <input type="hidden" name="thread" value={id} />
+                      <Textarea name="body" required minLength={2} maxLength={5000} rows={6} defaultValue={p.body} className="text-base" />
+                    </ActionForm>
+                  </details>
+                  <form action={deletePost}>
+                    <input type="hidden" name="post" value={p.id} />
+                    <input type="hidden" name="thread" value={id} />
+                    <button className="text-muted-foreground underline-offset-4 hover:text-bad hover:underline">Löschen</button>
+                  </form>
+                </>
               ) : (
                 <details>
                   <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Melden</summary>
@@ -95,6 +138,7 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
               Deine Antwort
               <Textarea name="body" required minLength={2} maxLength={5000} rows={5} className="text-base" />
             </label>
+            <PhotoInput />
           </ActionForm>
         ) : (
           <p className="mt-3">

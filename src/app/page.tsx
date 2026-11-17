@@ -47,6 +47,10 @@ export default function Home({ searchParams }: { searchParams: Promise<Record<st
             </Suspense>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">Kostenlos, ohne Anmeldung. Für AutoScout24, Kleinanzeigen und mobile.de.</p>
+          <p className="mt-3 text-sm">
+            Noch kein Inserat? <Link href="/finder" className="font-medium text-brand underline-offset-4 hover:underline">Auto-Finder</Link>
+            {" · "}Eigenes Auto verkaufen? <Link href="/wert" className="font-medium text-brand underline-offset-4 hover:underline">Wert ermitteln</Link>
+          </p>
         </div>
         <HeroCar />
       </section>

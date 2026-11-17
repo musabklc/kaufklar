@@ -1,10 +1,12 @@
+import { runGarage } from "@/lib/server/garage";
 import { runWatch } from "@/lib/server/watch";
 
 export const maxDuration = 60;
 
-/** Täglicher Preisalarm für gemerkte Autos. Nur mit CRON_SECRET (Vercel sendet ihn automatisch). */
+/** Täglich: Preisalarm für gemerkte Autos und Termin-Erinnerungen aus der Garage. Nur mit CRON_SECRET. */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) return new Response("Unauthorized", { status: 401 });
-  return Response.json(await runWatch(20));
+  const [watch, garage] = await Promise.all([runWatch(20), runGarage()]);
+  return Response.json({ ...watch, garage });
 }

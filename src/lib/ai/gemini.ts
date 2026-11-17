@@ -1,9 +1,9 @@
 import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
-import { AiAuditSchema, ExtractionSchema, ForumInsightsSchema, ModerationSchema, type ReportInput, type Vehicle } from "../types";
+import { AiAuditSchema, ExtractionSchema, FinderSchema, ForumInsightsSchema, InspectionSchema, ModerationSchema, ServiceBookSchema, type FinderInput, type ReportInput, type Vehicle } from "../types";
 import { AiError, webSearchEnabled, type AiProvider, type ForumPostInput, type ImageInput } from "./provider";
-import { AUDIT_SYSTEM, EXTRACT_SYSTEM, FORUM_SYSTEM, MODERATE_SYSTEM } from "./prompts";
+import { AUDIT_SYSTEM, EXTRACT_SYSTEM, FINDER_SYSTEM, FORUM_SYSTEM, INSPECT_SYSTEM, MODERATE_SYSTEM, SERVICEBOOK_SYSTEM } from "./prompts";
 import { parseLenient, toGeminiSchema } from "./schema";
 
 /**
@@ -118,6 +118,28 @@ export class GeminiProvider implements AiProvider {
       { type: "text", text: `<wissensdatenbank>\n${knowledgeSummary || "Keine Treffer in der Datenbank."}\n</wissensdatenbank>` },
       ...this.images(images),
     ], webSearchEnabled()); // mit Google-Recherche zu Schwachstellen dieses Modells
+  }
+
+  inspect({ vehicle, images, labels }: { vehicle: Vehicle; images: ImageInput[]; labels: string[] }) {
+    return this.json(InspectionSchema, INSPECT_SYSTEM, [
+      { type: "text", text: `Heutiges Datum: ${new Date().toLocaleDateString("de-DE")}` },
+      { type: "text", text: `<fahrzeug>\n${JSON.stringify({ make: vehicle.make, model: vehicle.model, variant: vehicle.variant, firstRegistration: vehicle.firstRegistration, mileageKm: vehicle.mileageKm }, null, 2)}\n</fahrzeug>` },
+      ...images.flatMap((img, i) => [
+        { type: "text" as const, text: `Bild ${i + 1} (laut Käufer: ${labels[i] || "ohne Angabe"}):` },
+        { type: "image" as const, data: img.data, mime_type: img.mediaType },
+      ]),
+    ]);
+  }
+
+  serviceBook({ vehicle, images }: { vehicle: Vehicle; images: ImageInput[] }) {
+    return this.json(ServiceBookSchema, SERVICEBOOK_SYSTEM, [
+      { type: "text", text: `Fahrzeug: ${[vehicle.make, vehicle.model, vehicle.variant].filter(Boolean).join(" ")}, EZ ${vehicle.firstRegistration ?? "?"}, laut Inserat ${vehicle.mileageKm ?? "?"} km.` },
+      ...this.images(images),
+    ]);
+  }
+
+  finder(input: FinderInput) {
+    return this.json(FinderSchema, FINDER_SYSTEM, [{ type: "text", text: `Heutiges Datum: ${new Date().toLocaleDateString("de-DE")}\n<wuensche>\n${JSON.stringify(input, null, 2)}\n</wuensche>` }]);
   }
 
   forumInsights(p: ForumPostInput) {

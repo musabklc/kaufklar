@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, BookOpen, CheckCircle2, ChevronDown, Info, Printer, Sparkles, XCircle } from "lucide-react";
+import { AlertTriangle, BookOpen, Camera, CheckCircle2, ChevronDown, Info, Printer, Sparkles, Warehouse, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,7 @@ import { saveAnalysis, useChecked } from "@/lib/storage";
 import type { AnalysisResult, Comp, Finding, WeakPoint } from "@/lib/types";
 import type { ForumInsight } from "@/lib/analysis/forum-insights";
 import { WatchButton } from "./watch-button";
+import { InspectionResult, ServiceBookResult } from "./inspection-summary";
 import { AskCommunity } from "./ask-community";
 import { CompsInput } from "@/components/intake/comps-input";
 import { ProvenanceBadge } from "./provenance";
@@ -55,7 +56,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
 
   function updateComps(user: number[]) {
     const comps: Comp[] = [...r.price.comps.filter((c) => c.source !== "nutzer"), ...user.map((price) => ({ price, source: "nutzer" as const }))];
-    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum };
+    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook };
     saveAnalysis(next); // Speicher-Hook rendert die Seite mit den neuen Werten
   }
 
@@ -72,6 +73,15 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <WatchButton r={r} />
           <AskCommunity r={r} />
+          <Link href={`/analyse/${r.id}/besichtigung`} className="no-print inline-flex min-h-11 items-center gap-2 rounded-full border border-input bg-card px-4 text-sm font-medium hover:bg-muted">
+            <Camera className="size-4" /> Besichtigung starten
+          </Link>
+          <Link
+            href={`/garage?${new URLSearchParams({ titel: [v.make, v.model, v.variant].filter(Boolean).join(" ").slice(0, 80), jahr: String(parseYear(v.firstRegistration) ?? ""), km: String(v.mileageKm ?? "") })}`}
+            className="no-print inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <Warehouse className="size-4" /> Gekauft? In die Garage
+          </Link>
         </div>
         <EditVehicle r={r} />
         {r.dataNotes.map((n) => (
@@ -102,6 +112,20 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         <Overview r={r} />
         <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} />
         <ForumSection items={r.forum ?? []} vehicle={r.vehicle} />
+        {(r.inspection || r.serviceBook) && (
+          <Section id="besichtigung-ergebnis" eyebrow="Vor Ort" title="Ergebnis deiner Besichtigung">
+            <div className="space-y-8">
+              {r.inspection && <InspectionResult i={r.inspection} />}
+              {r.serviceBook && (
+                <div>
+                  <h3 className="mb-3 text-lg font-semibold">Scheckheft</h3>
+                  <ServiceBookResult b={r.serviceBook} />
+                </div>
+              )}
+              <Link href={`/analyse/${r.id}/besichtigung`} className="inline-block font-medium text-brand underline-offset-4 hover:underline">Weitere Fotos prüfen</Link>
+            </div>
+          </Section>
+        )}
         <Findings items={r.findings} />
         <RecallsSection r={r} />
         <PriceSection r={r} onComps={updateComps} />
@@ -401,7 +425,7 @@ function EditVehicle({ r }: { r: AnalysisResult }) {
             size="lg"
             className="mt-5 h-12 px-6 text-base"
             onClick={() => {
-              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum });
+              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook });
               setOpen(false);
             }}
           >

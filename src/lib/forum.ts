@@ -19,3 +19,6 @@ export function snippet(text: string, terms: string[], len = 160): string {
 /** Profilbild-URL im öffentlichen Supabase-Speicher, oder null. */
 export const avatarUrl = (path: string | null | undefined) =>
   path && process.env.NEXT_PUBLIC_SUPABASE_URL ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}` : null;
+
+/** Öffentliche URL eines Forumsfotos. */
+export const forumImageUrl = (path: string) => `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/forum/${path}`;

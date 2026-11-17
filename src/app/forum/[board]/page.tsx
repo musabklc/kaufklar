@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionForm, labelCls } from "@/components/forum/action-form";
 import { SearchForm } from "@/components/forum/search-form";
-import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
+import { PhotoInput } from "@/components/forum/photo-input";
+import { currentUser, forumEnabled, supabasePublic, supabaseUser } from "@/lib/supabase/server";
 import { createThread } from "../actions";
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
 
 export async function generateMetadata({ params }: { params: Promise<{ board: string }> }) {
+  await connection(); // Titel zur Anfragezeit, ohne Sitzung
   if (!forumEnabled()) return {};
-  const sb = await supabaseUser();
+  const sb = supabasePublic();
   const { data } = await sb.from("forum_boards").select("title, description").eq("id", (await params).board).maybeSingle();
   return data ? { title: `${data.title} – Forum – Tachoklar`, description: data.description || `Erfahrungen und Fragen rund um ${data.title} im Tachoklar-Forum.` } : {};
 }
@@ -83,6 +85,7 @@ async function Board({ params, searchParams }: { params: Promise<{ board: string
               <Textarea name="body" required minLength={2} maxLength={5000} rows={draft.body ? 10 : 6} defaultValue={draft.body} className="text-base" />
               <span className="font-normal text-muted-foreground">Keine Telefonnummern, Kennzeichen oder Namen anderer. Bitte die <Link href="/forum/regeln" className="text-brand underline">Forenregeln</Link> beachten.</span>
             </label>
+            <PhotoInput />
           </ActionForm>
         ) : (
           <p className="mt-3">

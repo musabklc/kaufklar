@@ -81,6 +81,27 @@ export default function Datenschutz() {
       <p>
         Die Forensuche durchsucht nur öffentliche Titel und Beiträge. Suchbegriffe speichern wir nicht.
       </p>
+      <h3>Fotos im Forum</h3>
+      <p>
+        Fotos in Beiträgen werden schon in deinem Browser verkleinert und neu gespeichert; dabei gehen eingebettete Metadaten wie GPS-Ort und Kamera verloren.
+        Sie liegen öffentlich sichtbar im Speicher von Supabase (Frankfurt) und werden mit dem Beitrag oder deinem Konto gelöscht. Bitte keine Kennzeichen oder Personen fotografieren.
+      </p>
+      <h3>Besichtigung und Scheckheft</h3>
+      <p>
+        Fotos, die du bei der Besichtigung aufnimmst (Auto oder Scheckheft), schicken wir nur zur Auswertung an die Gemini-API von Google (siehe oben) und speichern sie nicht.
+        Das Ergebnis liegt nur in deinem Browser bzw. – wenn du die Analyse merkst – in deinem Konto. Auf Scheckheft-Fotos können Namen von Vorbesitzern oder Werkstätten stehen;
+        diese verwenden wir nicht weiter.
+      </p>
+      <h3>Meine Garage</h3>
+      <p>
+        Autos in deiner Garage (Bezeichnung, Baujahr, Kilometerstand, HU-, Service- und Zahnriemen-Termin, Notiz) speichern wir in deinem Konto, um dich per E-Mail an
+        fällige Termine zu erinnern (Art. 6 Abs. 1 lit. b DSGVO). Löschst du ein Auto oder dein Konto, sind die Daten weg.
+      </p>
+      <h3>Auto-Finder und Wertermittlung</h3>
+      <p>
+        Deine Angaben im Auto-Finder (Budget, Fahrprofil, Wünsche) gehen ohne Bezug zu deiner Person an die Gemini-API. Für die Wertermittlung suchen wir öffentliche Angebote
+        vergleichbarer Autos; deine Eingaben speichern wir nicht, die gefundenen Angebotspreise fließen anonym in unseren Preisindex.
+      </p>
       <h3>Merkliste, Preisalarm und Benachrichtigungen</h3>
       <p>
         Wenn du angemeldet eine Analyse „merkst“, speichern wir sie in deinem Konto (Supabase, Frankfurt), damit du sie auf jedem Gerät öffnen kannst

@@ -30,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <nav className="flex items-center gap-1 text-sm">
               <Link href="/forum" className="inline-flex min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground">Forum</Link>
               <Link href="/vergleich" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground sm:inline-flex">Vergleich</Link>
+              <Link href="/finder" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground lg:inline-flex">Auto-Finder</Link>
               <Link href="/analysen" className="hidden min-h-11 items-center px-3 font-medium text-foreground/75 transition-colors hover:text-foreground sm:inline-flex">Meine Analysen</Link>
               <Link href="/#pruefen" className="ml-1 inline-flex min-h-11 items-center whitespace-nowrap rounded-full bg-primary px-4 font-medium text-primary-foreground transition-[background-color,transform] hover:bg-[color-mix(in_oklch,var(--primary),black_14%)] active:translate-y-px"><span className="sm:hidden">Prüfen</span><span className="hidden sm:inline">Inserat prüfen</span></Link>
             </nav>
@@ -45,6 +46,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </p>
               <nav className="flex flex-wrap gap-6 text-background">
                 <Link href="/analysen" className="hover:underline">Meine Analysen</Link>
+                <Link href="/finder" className="hover:underline">Auto-Finder</Link>
+                <Link href="/wert" className="hover:underline">Auto-Wert</Link>
+                <Link href="/garage" className="hover:underline">Meine Garage</Link>
+                <Link href="/schwachstellen" className="hover:underline">Schwachstellen</Link>
                 <Link href="/melden" className="hover:underline">Problem melden</Link>
                 <Link href="/methodik" className="hover:underline">Methodik & Quellen</Link>
                 <Link href="/datenschutz" className="hover:underline">Datenschutz</Link>
