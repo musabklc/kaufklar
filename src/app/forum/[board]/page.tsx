@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionForm, labelCls } from "@/components/forum/action-form";
+import { SearchForm } from "@/components/forum/search-form";
 import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
 import { createThread } from "../actions";
 
@@ -36,6 +37,7 @@ async function Board({ params }: { params: Promise<{ board: string }> }) {
       <Link href="/forum" className="text-sm font-medium text-brand">← Alle Foren</Link>
       <h1 className="mt-3 text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">{board.title}</h1>
       {board.description && <p className="mt-3 max-w-2xl text-lg">{board.description}</p>}
+      <SearchForm className="mt-6" />
 
       <section className="mt-10">
         <h2 className="sr-only">Themen</h2>

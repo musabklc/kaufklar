@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ActionForm, labelCls } from "@/components/forum/action-form";
 import { currentUser, forumEnabled } from "@/lib/supabase/server";
-import { deleteAccount, requestReset, signIn, signOut, signUp } from "./actions";
+import { Avatar } from "@/components/forum/avatar";
+import { AvatarUpload } from "@/components/forum/avatar-upload";
+import { deleteAccount, removeAvatar, requestReset, signIn, signOut, signUp, updateCar, uploadAvatar } from "./actions";
 
 export const metadata = { title: "Konto – Tachoklar" };
 
@@ -26,7 +28,7 @@ async function Konto({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   if (!forumEnabled()) return <p>Das Forum ist auf diesem Server noch nicht eingerichtet.</p>;
   const user = await currentUser();
-  if (user) return <Account username={user.username} email={user.email} />;
+  if (user) return <Account username={user.username} email={user.email} car={user.car} avatarPath={user.avatarPath} />;
   return (
     <>
       <h1 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">Mitmachen im Forum</h1>
@@ -73,11 +75,16 @@ async function Konto({ searchParams }: { searchParams: SP }) {
   );
 }
 
-function Account({ username, email }: { username: string | null; email: string | null }) {
+function Account({ username, email, car, avatarPath }: { username: string | null; email: string | null; car: string | null; avatarPath: string | null }) {
   return (
     <>
-      <h1 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">Hallo {username ?? "du"}</h1>
-      <p className="mt-4 text-lg text-muted-foreground">Angemeldet als {email}</p>
+      <div className="flex items-center gap-5">
+        <Avatar name={username} path={avatarPath} size={72} />
+        <div>
+          <h1 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">Hallo {username ?? "du"}</h1>
+          <p className="mt-2 text-lg text-muted-foreground">Angemeldet als {email}</p>
+        </div>
+      </div>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/forum" className="inline-flex h-11 items-center rounded-full bg-primary px-6 font-medium text-primary-foreground">Zum Forum</Link>
         <form action={signOut}>
@@ -85,6 +92,30 @@ function Account({ username, email }: { username: string | null; email: string |
         </form>
       </div>
       <section className="mt-12 max-w-xl rounded-3xl bg-card p-6 sm:p-8">
+        <h2 className="text-2xl font-semibold">Dein Profil</h2>
+        <p className="mt-2 text-muted-foreground">Freiwillig. Beides ist bei deinen Beiträgen öffentlich sichtbar.</p>
+
+        <h3 className="mt-6 font-semibold">Profilbild</h3>
+        <p className="mt-1 text-sm text-muted-foreground">Wird quadratisch zugeschnitten und verkleinert. Bitte kein Kennzeichen und keine fremden Personen.</p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <AvatarUpload action={uploadAvatar} />
+          {avatarPath && (
+            <form action={removeAvatar}>
+              <Button type="submit" variant="ghost" className="h-11 px-4 text-muted-foreground">Bild entfernen</Button>
+            </form>
+          )}
+        </div>
+
+        <h3 className="mt-8 font-semibold">Dein Auto</h3>
+        <ActionForm action={updateCar} submit="Speichern" variant="outline" className="mt-3 space-y-3">
+          <label className={labelCls}>
+            Welches Auto fährst du? <span className="font-normal text-muted-foreground">z. B. „BMW 320d F31, 2015“ – leer lassen zum Entfernen</span>
+            <Input name="car" defaultValue={car ?? ""} maxLength={60} className="h-11" />
+          </label>
+        </ActionForm>
+      </section>
+
+      <section className="mt-6 max-w-xl rounded-3xl bg-card p-6 sm:p-8">
         <h2 className="text-2xl font-semibold">Konto löschen</h2>
         <p className="mt-2">Dein Konto, dein Profil und alle deine Beiträge werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.</p>
         <ActionForm action={deleteAccount} submit="Konto endgültig löschen" variant="destructive" className="mt-6 space-y-4">

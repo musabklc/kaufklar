@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
 import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
+import { SearchForm } from "@/components/forum/search-form";
 
 export const metadata = { title: "Forum – Tachoklar", description: "Austausch unter Gebrauchtwagen-Käufern und -Fahrern: Kaufberatung, Inserat-Check, Erfahrungen, Unterforen je Marke." };
 
@@ -46,6 +47,7 @@ async function Boards() {
           <Link href="/konto" className="inline-flex h-11 items-center rounded-full bg-primary px-6 font-medium text-primary-foreground">Anmelden oder Konto erstellen</Link>
         )}
       </div>
+      <SearchForm className="mt-8" />
       {groups.map((g) => (
         <section key={g} className="mt-12">
           <h2 className="text-2xl font-semibold">{g}</h2>

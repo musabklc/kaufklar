@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { sniff } from "@/lib/guards";
 import { SITE_URL } from "@/lib/site";
 import { currentUser, supabaseUser } from "@/lib/supabase/server";
 
@@ -79,6 +81,61 @@ export async function setNewPassword(_: FormState, f: FormData): Promise<FormSta
   redirect("/konto");
 }
 
+const Car = z
+  .string()
+  .trim()
+  .max(60, "Höchstens 60 Zeichen.")
+  .regex(/^[\p{L}\p{N} .,\-/+()&'’]*$/u, "Bitte nur Buchstaben, Ziffern und einfache Satzzeichen (keine Links).");
+
+/** Profil: welches Auto man fährt (freiwillig, öffentlich sichtbar). Leer = entfernen. */
+export async function updateCar(_: FormState, f: FormData): Promise<FormState> {
+  const user = await currentUser();
+  if (!user?.username) return { message: "Bitte melde dich erneut an." };
+  const parsed = Car.safeParse(field(f, "car") ?? "");
+  if (!parsed.success) return { message: firstIssue(parsed.error) };
+  const car = parsed.data.length >= 2 ? parsed.data : null;
+  const sb = await supabaseUser();
+  const { error } = await sb.from("profiles").update({ car }).eq("id", user.id);
+  if (error) return { message: "Speichern hat nicht geklappt. Bitte erneut versuchen." };
+  revalidatePath("/konto");
+  return { ok: true, message: car ? "Gespeichert." : "Auto entfernt." };
+}
+
+const AVATAR_MAX = 300 * 1024;
+
+/** Profilbild hochladen: der Browser liefert ein 256×256-Bild (WebP/JPEG); Server prüft Größe und echte Dateisignatur. */
+export async function uploadAvatar(_: FormState, f: FormData): Promise<FormState> {
+  const user = await currentUser();
+  if (!user?.username) return { message: "Bitte melde dich erneut an." };
+  const file = f.get("avatar");
+  if (!(file instanceof File) || file.size === 0) return { message: "Bitte ein Bild auswählen." };
+  if (file.size > AVATAR_MAX) return { message: "Das Bild ist zu groß." };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const type = sniff(bytes);
+  if (type !== "image/webp" && type !== "image/jpeg") return { message: "Bitte ein JPG-, PNG- oder WebP-Bild wählen." };
+  const path = `${user.id}/avatar-${Date.now()}.${type === "image/webp" ? "webp" : "jpg"}`; // neuer Name: kein veralteter Browser-Cache
+  const sb = await supabaseUser();
+  const { error } = await sb.storage.from("avatars").upload(path, bytes, { contentType: type, cacheControl: "31536000" });
+  if (error) return { message: "Hochladen hat nicht geklappt. Bitte erneut versuchen." };
+  const { error: dbError } = await sb.from("profiles").update({ avatar_path: path }).eq("id", user.id);
+  if (dbError) {
+    await sb.storage.from("avatars").remove([path]);
+    return { message: "Speichern hat nicht geklappt. Bitte erneut versuchen." };
+  }
+  if (user.avatarPath) await sb.storage.from("avatars").remove([user.avatarPath]);
+  revalidatePath("/konto");
+  return { ok: true, message: "Profilbild gespeichert." };
+}
+
+export async function removeAvatar(): Promise<void> {
+  const user = await currentUser();
+  if (!user?.avatarPath) return;
+  const sb = await supabaseUser();
+  await sb.from("profiles").update({ avatar_path: null }).eq("id", user.id);
+  await sb.storage.from("avatars").remove([user.avatarPath]);
+  revalidatePath("/konto");
+}
+
 /** DSGVO Art. 17: Konto mit allen eigenen Beiträgen löschen. Vorher Passwort bestätigen. */
 export async function deleteAccount(_: FormState, f: FormData): Promise<FormState> {
   const user = await currentUser();
@@ -87,6 +144,9 @@ export async function deleteAccount(_: FormState, f: FormData): Promise<FormStat
   const { error } = await sb.auth.signInWithPassword({ email: user.email, password: field(f, "password") ?? "" });
   if (error) return { message: "Das Passwort stimmt nicht." };
   await sb.from("forum_posts").delete().eq("author_id", user.id);
+  // Profilbilder liegen im Speicher, nicht in der Tabelle – sie verschwinden nicht mit dem Konto
+  const { data: files } = await sb.storage.from("avatars").list(user.id);
+  if (files?.length) await sb.storage.from("avatars").remove(files.map((x) => `${user.id}/${x.name}`));
   const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
   await sb.auth.signOut({ scope: "global" }); // alle Sitzungen beenden, bevor das Konto verschwindet
   const { error: delError } = await admin.auth.admin.deleteUser(user.id);

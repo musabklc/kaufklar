@@ -29,6 +29,12 @@ export async function currentUser() {
   const { data } = await sb.auth.getClaims();
   const id = data?.claims?.sub;
   if (!id) return null;
-  const { data: profile } = await sb.from("profiles").select("username").eq("id", id).maybeSingle();
-  return { id, email: (data.claims.email as string | undefined) ?? null, username: profile?.username ?? null };
+  const { data: profile } = await sb.from("profiles").select("username, car, avatar_path").eq("id", id).maybeSingle();
+  return {
+    id,
+    email: (data.claims.email as string | undefined) ?? null,
+    username: profile?.username ?? null,
+    car: (profile?.car as string | null) ?? null,
+    avatarPath: (profile?.avatar_path as string | null) ?? null,
+  };
 }

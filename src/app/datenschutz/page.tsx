@@ -70,6 +70,15 @@ export default function Datenschutz() {
         Gemeldete Beiträge und die Meldungen dazu speichern wir, bis die Prüfung abgeschlossen ist.
       </p>
       <p>
+        Freiwillig kannst du ein Profilbild hochladen und angeben, welches Auto du fährst (Art. 6 Abs. 1 lit. a DSGVO, Einwilligung durch das
+        Hochladen bzw. Eintragen). Beides ist bei deinen Beiträgen öffentlich sichtbar. Das Bild wird schon in deinem Browser auf 256 × 256 Pixel
+        verkleinert; dabei gehen eingebettete Metadaten wie Kamera- oder GPS-Angaben verloren. Es liegt im Speicher von Supabase (Frankfurt). Du kannst
+        Bild und Auto jederzeit unter „Konto“ ändern oder entfernen; beim Löschen des Kontos werden beide mitgelöscht.
+      </p>
+      <p>
+        Die Forensuche durchsucht nur öffentliche Titel und Beiträge. Suchbegriffe speichern wir nicht.
+      </p>
+      <p>
         Für die Anmeldung setzen wir ein technisch notwendiges Cookie (Sitzung), ohne das der Login nicht funktioniert (§ 25 Abs. 2 Nr. 2 TDDDG).
         Es wird nur gesetzt, wenn du dich anmeldest, und enthält keine Tracking-Daten.
       </p>
