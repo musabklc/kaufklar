@@ -1,6 +1,8 @@
 import "server-only";
 import { serviceDb } from "./forum-admin";
 import type { AnalysisResult } from "../types";
+import { freeView } from "../analysis/premium";
+import { premiumEnabled } from "./payments";
 
 const ANON_DAYS = 90;
 
@@ -12,10 +14,13 @@ export async function storeAnalysis(result: AnalysisResult, userId: string | nul
   if (error) console.error("analysis store failed", error.message);
 }
 
-export async function getAnalysis(id: string): Promise<{ result: AnalysisResult; userId: string | null } | null> {
-  const { data } = (await serviceDb()?.from("analyses").select("result, user_id").eq("id", id).maybeSingle()) ?? { data: null };
-  return data ? { result: data.result as AnalysisResult, userId: data.user_id } : null;
+export async function getAnalysis(id: string): Promise<{ result: AnalysisResult; userId: string | null; premium: boolean } | null> {
+  const { data } = (await serviceDb()?.from("analyses").select("result, user_id, premium_at").eq("id", id).maybeSingle()) ?? { data: null };
+  return data ? { result: data.result as AnalysisResult, userId: data.user_id, premium: Boolean(data.premium_at) } : null;
 }
+
+/** Was der Besucher sehen darf: ohne Bezahlschranke oder nach Zahlung alles, sonst die kostenlose Fassung. */
+export const visible = (result: AnalysisResult, premium: boolean) => (premiumEnabled() && !premium ? freeView(result) : result);
 
 /** Ohne Konto darf löschen, wer den Link hat; mit Konto nur der Besitzer. */
 export async function deleteAnalysis(id: string, userId: string | null): Promise<boolean> {

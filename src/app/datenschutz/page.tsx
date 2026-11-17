@@ -154,6 +154,12 @@ export default function Datenschutz() {
         Preisindex, Meldungen, Typ- und Rückrufdaten liegen bei Supabase Inc. in einem Rechenzentrum in Frankfurt am Main (EU). Mit dem Anbieter besteht ein
         Auftragsverarbeitungsverhältnis. Mehr: <A href="https://supabase.com/privacy">Datenschutzerklärung von Supabase</A>.
       </p>
+      <p>
+        <strong>Bezahlung (Premium-Bericht):</strong> Kaufst du einen Premium-Bericht, wickelt Stripe Payments Europe Ltd. (Irland) die Zahlung ab. Deine Zahlungsdaten gibst du
+        direkt bei Stripe ein; wir erhalten sie nicht. Wir speichern nur Bestellkennung, Betrag, Zeitpunkt, Zahlungsstatus, die zugehörige Analyse und den Zeitpunkt deiner
+        Zustimmung zum sofortigen Beginn (Widerrufsrecht). Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, für die Aufbewahrung der Buchungsdaten Art. 6 Abs. 1 lit. c DSGVO
+        (handels- und steuerrechtliche Pflichten, bis zu 10 Jahre). Mehr: <A href="https://stripe.com/de/privacy">Datenschutzerklärung von Stripe</A>.
+      </p>
 
       <h2>8. Speicherdauer</h2>
       <p>

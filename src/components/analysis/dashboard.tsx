@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, BookOpen, Camera, CheckCircle2, ChevronDown, Info, Printer, Sparkles, Warehouse, XCircle } from "lucide-react";
+import { AlertTriangle, BookOpen, Camera, CheckCircle2, ChevronDown, Info, Lock, Printer, Sparkles, Warehouse, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,10 +16,12 @@ import { AskCommunity } from "./ask-community";
 import { CompsInput } from "@/components/intake/comps-input";
 import { ProvenanceBadge } from "./provenance";
 import { CostsSection } from "./costs-section";
+import { UnlockCard } from "./unlock-card";
 import { ReportForm } from "@/components/community/report-form";
 import { VehicleForm } from "@/components/intake/vehicle-form";
 import type { Vehicle } from "@/lib/types";
 import { parseYear } from "@/lib/analysis/knowledge";
+import { FREE_WEAKPOINTS } from "@/lib/analysis/premium";
 import { AlternativesSection } from "./alternatives-section";
 import { safeHref } from "@/lib/guards";
 import { priceVerdict } from "@/lib/analysis/market";
@@ -41,8 +43,13 @@ const NAV = [
   ["fazit", "Fazit"],
 ] as const;
 
+// In der kostenlosen Fassung sichtbar; alles andere steckt im Premium-Bericht
+const FREE_SECTIONS = new Set(["uebersicht", "schwachstellen", "forum", "inserat", "rueckrufe", "kosten"]);
+
 export function Dashboard({ r }: { r: AnalysisResult }) {
   const v = r.vehicle;
+  const locked = Boolean(r.locked);
+  const nav = locked ? [...NAV.filter(([id]) => FREE_SECTIONS.has(id)), ["premium", "Premium-Bericht"] as const] : NAV;
   const name = [v.make, v.model, v.variant].filter(Boolean).join(" ");
   const facts = [
     v.firstRegistration && `EZ ${v.firstRegistration}`,
@@ -56,7 +63,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
 
   function updateComps(user: number[]) {
     const comps: Comp[] = [...r.price.comps.filter((c) => c.source !== "nutzer"), ...user.map((price) => ({ price, source: "nutzer" as const }))];
-    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook };
+    const next = { ...buildAnalysis({ id: r.id, vehicle: r.vehicle, comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked };
     saveAnalysis(next); // Speicher-Hook rendert die Seite mit den neuen Werten
   }
 
@@ -99,7 +106,7 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
       {/* Sektionsnavigation */}
       <nav aria-label="Abschnitte" className="no-print sticky top-16 z-30 -mx-4 mt-6 border-b bg-background px-4 sm:-mx-6 sm:px-6">
         <ul className="flex gap-1 overflow-x-auto py-2 [scrollbar-width:none]">
-          {NAV.map(([id, label]) => (
+          {nav.map(([id, label]) => (
             <li key={id}>
               <a href={`#${id}`} className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:text-foreground">{label}</a>
             </li>
@@ -108,9 +115,10 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
       </nav>
 
       <div className="mt-6 space-y-6">
-        <PriceCheck r={r} />
+        {!locked && <PriceCheck r={r} />}
         <Overview r={r} />
-        <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} identification={r.identification} />
+        <WeakPoints items={r.weakPoints} knowledge={r.matchedKnowledge} identification={r.identification} locked={locked} />
+        {locked && <UnlockCard r={r} />}
         <ForumSection items={r.forum ?? []} vehicle={r.vehicle} />
         {(r.inspection || r.serviceBook) && (
           <Section id="besichtigung-ergebnis" eyebrow="Vor Ort" title="Ergebnis deiner Besichtigung">
@@ -128,8 +136,10 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         )}
         <Findings items={r.findings} />
         <RecallsSection r={r} />
-        <PriceSection r={r} onComps={updateComps} />
+        {!locked && <PriceSection r={r} onComps={updateComps} />}
         <CostsSection r={r} />
+        {!locked && (
+        <>
         <AlternativesSection r={r} />
         <Checklist r={r} />
         <Section id="fragen" eyebrow="Vor dem Termin" title="Fragen an den Verkäufer" action={<CopyButton label="Fragen kopieren" text={r.questions.map((q, i) => `${i + 1}. ${q}`).join("\n")} />}>
@@ -161,6 +171,8 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
         </Section>
         <NegotiationSection r={r} />
         <Summary r={r} />
+        </>
+        )}
         <Section id="melden" title="Kennst du dieses Modell?">
           <p className="mb-6 max-w-3xl">Hattest du selbst Probleme mit einem {name || "solchen Auto"}? Melde sie – so wird Tachoklar mit jedem Nutzer genauer.</p>
           <ReportForm initial={{ make: v.make, model: v.model, engineCode: v.engineCode, year: parseYear(v.firstRegistration) }} />
@@ -277,7 +289,7 @@ function Overview({ r }: { r: AnalysisResult }) {
   );
 }
 
-function WeakPointCard({ w }: { w: WeakPoint }) {
+function WeakPointCard({ w, locked }: { w: WeakPoint; locked: boolean }) {
   return (
     <li className="grid gap-x-8 gap-y-3 border-b border-border py-6 first:pt-0 last:border-0 sm:grid-cols-[1fr_auto]">
       <div className="min-w-0">
@@ -288,11 +300,17 @@ function WeakPointCard({ w }: { w: WeakPoint }) {
         </div>
         <p className="mt-1 text-sm text-foreground/70">{w.component} · {w.origin}{w.relevantFromKm ? ` · relevant ab ca. ${w.relevantFromKm.toLocaleString("de-DE")} km` : ""}</p>
         <p className="mt-3 max-w-3xl">{w.detail}</p>
-        <p className="mt-2 max-w-3xl"><span className="font-semibold">So erkennst du es:</span> {w.detection}</p>
+        {!locked && <p className="mt-2 max-w-3xl"><span className="font-semibold">So erkennst du es:</span> {w.detection}</p>}
       </div>
       <div className="sm:text-right">
-        <p className="text-2xl font-bold tabular sm:text-3xl">{range(w.costMin, w.costMax)}</p>
-        <p className="text-sm text-foreground/70">Reparatur, Richtwert*</p>
+        {locked ? (
+          <a href="#premium" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand"><Lock className="size-4" /> Kosten im Premium-Bericht</a>
+        ) : (
+          <>
+            <p className="text-2xl font-bold tabular sm:text-3xl">{range(w.costMin, w.costMax)}</p>
+            <p className="text-sm text-foreground/70">Reparatur, Richtwert*</p>
+          </>
+        )}
       </div>
     </li>
   );
@@ -300,7 +318,9 @@ function WeakPointCard({ w }: { w: WeakPoint }) {
 
 const CERTAINTY: Record<Identification["certainty"], string> = { angegeben: "bg-ok-soft text-ok", wahrscheinlich: "bg-brand/10 text-brand", unklar: "bg-warn-soft text-warn" };
 
-function WeakPoints({ items, knowledge, identification }: { items: WeakPoint[]; knowledge: AnalysisResult["matchedKnowledge"]; identification?: Identification[] }) {
+function WeakPoints({ items: all, knowledge, identification, locked }: { items: WeakPoint[]; knowledge: AnalysisResult["matchedKnowledge"]; identification?: Identification[]; locked: boolean }) {
+  // Kostenlos: nur die ersten Punkte, ohne Kosten (auch nach einer Neuberechnung im Browser)
+  const items = locked ? all.slice(0, FREE_WEAKPOINTS).map((w) => ({ ...w, costMin: null, costMax: null, detection: "" })) : all;
   const now = items.filter((w) => w.relevantNow);
   const later = items.filter((w) => !w.relevantNow);
   return (
@@ -336,11 +356,11 @@ function WeakPoints({ items, knowledge, identification }: { items: WeakPoint[]; 
           <Info className="mt-0.5 size-4 shrink-0" /> Für dieses Fahrzeug gibt es noch keinen Eintrag in unserer Wissensdatenbank. Angezeigt werden allgemeine Verschleißpunkte{items.some((w) => w.provenance === "ki") ? " und KI-Einschätzungen" : ""}. Ergänze Hubraum und Baujahr für eine genauere Zuordnung.
         </p>
       )}
-      {now.length ? <ul>{now.map((w) => <WeakPointCard key={w.id} w={w} />)}</ul> : <p className="text-sm text-muted-foreground">Keine bei diesem Kilometerstand relevanten Schwachstellen bekannt.</p>}
+      {now.length ? <ul>{now.map((w) => <WeakPointCard key={w.id} w={w} locked={locked} />)}</ul> : <p className="text-sm text-muted-foreground">Keine bei diesem Kilometerstand relevanten Schwachstellen bekannt.</p>}
       {later.length > 0 && (
         <details className="mt-4 rounded-xl border p-4">
           <summary className="cursor-pointer text-sm font-medium">Bei diesem km-Stand noch nicht relevant ({later.length})</summary>
-          <ul className="mt-4">{later.map((w) => <WeakPointCard key={w.id} w={w} />)}</ul>
+          <ul className="mt-4">{later.map((w) => <WeakPointCard key={w.id} w={w} locked={locked} />)}</ul>
         </details>
       )}
       <p className="mt-4 text-xs text-muted-foreground">* Unverbindliche Richtwerte für eine freie Werkstatt in Deutschland inkl. Teile. Tatsächliche Kosten können deutlich abweichen.</p>
@@ -450,7 +470,7 @@ function EditVehicle({ r }: { r: AnalysisResult }) {
             size="lg"
             className="mt-5 h-12 px-6 text-base"
             onClick={() => {
-              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook });
+              saveAnalysis({ ...buildAnalysis({ id: r.id, vehicle: draft, comps: r.price.comps, ai: r.ai, aiNote: r.aiNote, alternatives: r.alternatives, dataNotes: r.dataNotes, recalls: r.recalls, community: r.community, now: new Date(r.createdAt) }), forum: r.forum, inspection: r.inspection, serviceBook: r.serviceBook, locked: r.locked });
               setOpen(false);
             }}
           >

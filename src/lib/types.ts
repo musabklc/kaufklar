@@ -274,6 +274,8 @@ export type AnalysisResult = {
   summary: { pros: string[]; cons: string[]; mustCheck: string[] };
   /** Fehlen bei älteren gespeicherten Analysen. */
   identification?: Identification[];
+  /** Gesetzt = kostenlose Fassung (Premium noch nicht bezahlt); weakPoints = Anzahl ausgeblendeter Schwachstellen. */
+  locked?: { weakPoints: number };
   dataQuality?: DataQuality;
   alternatives: Alternative[];
   aiUsed: boolean;

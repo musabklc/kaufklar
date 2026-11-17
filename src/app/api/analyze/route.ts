@@ -5,7 +5,7 @@ import { buildAnalysis } from "@/lib/analysis/engine";
 import { matchKnowledge } from "@/lib/analysis/knowledge";
 import { fail, json, rateLimited, readImages } from "@/lib/server/http";
 import { logEvent } from "@/lib/server/usage";
-import { storeAnalysis } from "@/lib/server/analyses";
+import { storeAnalysis, visible } from "@/lib/server/analyses";
 import { currentUser } from "@/lib/supabase/server";
 import { searchKleinanzeigen, verifyListings } from "@/lib/server/link";
 import { bodyOf, trimOf, vehicleText } from "@/lib/analysis/market";
@@ -116,5 +116,5 @@ export async function POST(req: Request) {
   await Promise.all([recordObservations(vehicle, sealed, web), currentUser().then((u) => storeAnalysis(result, u?.id ?? null))]);
   // "ok" = mit KI-Teil; ohne KI ist die Analyse nur eingeschränkt
   await logEvent({ kind: "analyze", op: origin, ok: ai !== null, ms: Date.now() - started, error: aiNote ?? undefined });
-  return json(result);
+  return json(visible(result, false));
 }

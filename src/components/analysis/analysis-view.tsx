@@ -5,13 +5,26 @@ import Link from "next/link";
 import { Dashboard } from "@/components/analysis/dashboard";
 import { saveAnalysis, useAnalysis } from "@/lib/storage";
 import { loadSaved } from "@/app/analysen/actions";
-import { loadAnalysis } from "@/app/analyse/actions";
+import { confirmPayment, loadAnalysis } from "@/app/analyse/actions";
 
 export function AnalysisView({ id }: { id: string }) {
   const analysis = useAnalysis(id);
   // Nicht in diesem Browser? Vom Server holen (geteilter Link, anderes Gerät) oder aus der Merkliste – dann hierher übernehmen.
   const [fromAccount, setFromAccount] = useState<"nein" | null>(null);
   const asked = useRef(false);
+  // Freigeschaltet (Rückkehr von Stripe oder auf einem anderen Gerät bezahlt)? Dann die volle Fassung vom Server holen.
+  const unlockChecked = useRef(false);
+  useEffect(() => {
+    if (!analysis?.locked || unlockChecked.current) return;
+    unlockChecked.current = true;
+    const session = new URLSearchParams(window.location.search).get("bezahlt");
+    (session ? confirmPayment(id, session) : loadAnalysis(id))
+      .then((a) => {
+        if (a && !a.locked) saveAnalysis({ ...a, inspection: analysis.inspection, serviceBook: analysis.serviceBook });
+        if (session) window.history.replaceState(null, "", window.location.pathname);
+      })
+      .catch(() => {});
+  }, [analysis, id]);
   useEffect(() => {
     if (analysis !== null || asked.current) return;
     asked.current = true;
