@@ -55,7 +55,8 @@ export async function signIn(_: FormState, f: FormData): Promise<FormState> {
   const sb = await supabaseUser();
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) return { message: error.code === "email_not_confirmed" ? "Bitte bestätige zuerst deine E-Mail-Adresse (Link in der E-Mail)." : "E-Mail oder Passwort stimmen nicht." };
-  redirect("/forum");
+  const next = field(f, "weiter") ?? "";
+  redirect(next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/forum"); // nur eigene Pfade, kein offener Redirect
 }
 
 export async function signOut() {
@@ -99,6 +100,15 @@ export async function updateCar(_: FormState, f: FormData): Promise<FormState> {
   if (error) return { message: "Speichern hat nicht geklappt. Bitte erneut versuchen." };
   revalidatePath("/konto");
   return { ok: true, message: car ? "Gespeichert." : "Auto entfernt." };
+}
+
+/** Mail bei Antworten auf eigene Themen ein/aus. */
+export async function setNotifyReplies(f: FormData): Promise<void> {
+  const user = await currentUser();
+  if (!user) return;
+  const sb = await supabaseUser();
+  await sb.from("profiles").update({ notify_replies: f.get("on") === "1" }).eq("id", user.id);
+  revalidatePath("/konto");
 }
 
 const AVATAR_MAX = 300 * 1024;

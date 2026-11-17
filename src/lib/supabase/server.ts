@@ -30,6 +30,8 @@ export async function currentUser() {
   const id = data?.claims?.sub;
   if (!id) return null;
   const { data: profile } = await sb.from("profiles").select("username, car, avatar_path").eq("id", id).maybeSingle();
+  // Gelöschtes Konto: das Token bleibt bis zum Ablauf formal gültig, das Profil ist aber weg → gilt als abgemeldet
+  if (!profile) return null;
   return {
     id,
     email: (data.claims.email as string | undefined) ?? null,

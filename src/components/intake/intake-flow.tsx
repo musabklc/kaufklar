@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, ImagePlus, Link2, Loader2, PenLine, X, AlertTriangle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,11 @@ const MODES: { id: Mode; label: string; icon: typeof Link2 }[] = [
   { id: "manuell", label: "Manuell", icon: PenLine },
 ];
 
-export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; linkEnabled: boolean }) {
+export function IntakeFlow({ aiEnabled, linkEnabled, initialUrl = "" }: { aiEnabled: boolean; linkEnabled: boolean; initialUrl?: string }) {
   const router = useRouter();
   const [step, setStep] = useState<"input" | "review">("input");
   const [mode, setMode] = useState<Mode>(!aiEnabled ? "manuell" : linkEnabled ? "link" : "bilder");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialUrl);
   const [files, setFiles] = useState<File[]>([]);
   const [vehicle, setVehicle] = useState<Vehicle>(EMPTY_VEHICLE);
   const [uncertain, setUncertain] = useState<string[]>([]);
@@ -40,6 +40,15 @@ export function IntakeFlow({ aiEnabled, linkEnabled }: { aiEnabled: boolean; lin
     if (files.length + compressed.length > 8) setError("Maximal 8 Bilder – überzählige wurden ignoriert.");
     setFiles((prev) => [...prev, ...compressed].slice(0, 8));
   }
+
+  // Über "Teilen → Tachoklar" gekommen: Link sofort auslesen, ohne dass man noch etwas tippen muss
+  const shared = useRef(false);
+  useEffect(() => {
+    if (!initialUrl || mode !== "link" || shared.current) return;
+    shared.current = true;
+    void extract();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nur einmal beim Öffnen
+  }, []);
 
   async function extract() {
     setError(null);

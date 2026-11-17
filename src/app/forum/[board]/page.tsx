@@ -9,11 +9,21 @@ import { SearchForm } from "@/components/forum/search-form";
 import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
 import { createThread } from "../actions";
 
-export default function BoardPage({ params }: { params: Promise<{ board: string }> }) {
+type SP = Promise<Record<string, string | string[] | undefined>>;
+
+export async function generateMetadata({ params }: { params: Promise<{ board: string }> }) {
+  if (!forumEnabled()) return {};
+  const sb = await supabaseUser();
+  const { data } = await sb.from("forum_boards").select("title, description").eq("id", (await params).board).maybeSingle();
+  return data ? { title: `${data.title} – Forum – Tachoklar`, description: data.description || `Erfahrungen und Fragen rund um ${data.title} im Tachoklar-Forum.` } : {};
+}
+const one = (x: string | string[] | undefined, max: number) => (typeof x === "string" ? x.slice(0, max) : "");
+
+export default function BoardPage({ params, searchParams }: { params: Promise<{ board: string }>; searchParams: SP }) {
   return (
     <div className="mx-auto max-w-[78rem] px-4 py-10 sm:px-6 lg:py-16">
       <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-card" />}>
-        <Board params={params} />
+        <Board params={params} searchParams={searchParams} />
       </Suspense>
     </div>
   );
@@ -21,10 +31,13 @@ export default function BoardPage({ params }: { params: Promise<{ board: string 
 
 const when = (d: string) => new Date(d).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Berlin" });
 
-async function Board({ params }: { params: Promise<{ board: string }> }) {
+async function Board({ params, searchParams }: { params: Promise<{ board: string }>; searchParams: SP }) {
   await connection(); // Sitzung und Beiträge: immer zur Anfragezeit, nie vorab gerendert
   if (!forumEnabled()) notFound();
   const { board: id } = await params;
+  const sp = await searchParams;
+  // Vorschlag aus einer Analyse ("Community fragen"): nur als Startwert, der Nutzer kann alles ändern
+  const draft = { title: one(sp.titel, 120), body: one(sp.text, 5000) };
   const sb = await supabaseUser();
   const [{ data: board }, { data: threads }, user] = await Promise.all([
     sb.from("forum_boards").select("id, title, description").eq("id", id).maybeSingle(),
@@ -59,21 +72,21 @@ async function Board({ params }: { params: Promise<{ board: string }> }) {
         )}
       </section>
 
-      <section className="mt-12 rounded-3xl bg-card p-6 sm:p-8">
+      <section id="neu" className="mt-12 scroll-mt-24 rounded-3xl bg-card p-6 sm:p-8">
         <h2 className="text-2xl font-semibold">Neues Thema</h2>
         {user?.username ? (
           <ActionForm action={createThread} submit="Thema veröffentlichen" className="mt-6 space-y-4">
             <input type="hidden" name="board" value={board.id} />
-            <label className={labelCls}>Titel<Input name="title" required minLength={5} maxLength={120} placeholder="z. B. BMW 320d F31 mit 180.000 km – worauf achten?" className="h-11" /></label>
+            <label className={labelCls}>Titel<Input name="title" required minLength={5} maxLength={120} defaultValue={draft.title} placeholder="z. B. BMW 320d F31 mit 180.000 km – worauf achten?" className="h-11" /></label>
             <label className={labelCls}>
               Text
-              <Textarea name="body" required minLength={2} maxLength={5000} rows={6} className="text-base" />
+              <Textarea name="body" required minLength={2} maxLength={5000} rows={draft.body ? 10 : 6} defaultValue={draft.body} className="text-base" />
               <span className="font-normal text-muted-foreground">Keine Telefonnummern, Kennzeichen oder Namen anderer. Bitte die <Link href="/forum/regeln" className="text-brand underline">Forenregeln</Link> beachten.</span>
             </label>
           </ActionForm>
         ) : (
           <p className="mt-3">
-            <Link href="/konto" className="font-medium text-brand underline">Melde dich an</Link>, um ein Thema zu erstellen.
+            <Link href={`/konto?weiter=${encodeURIComponent(`/forum/${board.id}${draft.title ? `?${new URLSearchParams({ titel: draft.title, text: draft.body })}` : ""}#neu`)}`} className="font-medium text-brand underline">Melde dich an</Link>, um ein Thema zu erstellen.
           </p>
         )}
       </section>

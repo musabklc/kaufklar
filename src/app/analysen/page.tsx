@@ -5,6 +5,7 @@ import { ArrowRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VERDICT } from "@/components/analysis/parts";
 import { deleteAnalysis, useAnalyses } from "@/lib/storage";
+import { SavedInAccount } from "./saved-in-account";
 
 export default function AnalysenPage() {
   const list = useAnalyses();
@@ -12,7 +13,9 @@ export default function AnalysenPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-semibold tracking-tight">Meine Analysen</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Gespeichert nur in diesem Browser. Wir speichern keine Analysen auf unseren Servern.</p>
+      <SavedInAccount />
+      <h2 className="mt-10 text-xl font-semibold">In diesem Browser</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Nur hier gespeichert, nicht auf unseren Servern – außer du merkst sie dir im Konto.</p>
       {list && list.length === 0 && (
         <div className="mt-10 rounded-3xl bg-card p-8 text-center">
           <p className="text-muted-foreground">Noch keine Analysen.</p>

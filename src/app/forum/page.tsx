@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
 import { SearchForm } from "@/components/forum/search-form";
+import { profileFlags, serviceDb } from "@/lib/server/forum-admin";
 
 export const metadata = { title: "Forum – Tachoklar", description: "Austausch unter Gebrauchtwagen-Käufern und -Fahrern: Kaufberatung, Inserat-Check, Erfahrungen, Unterforen je Marke." };
 
@@ -25,6 +26,8 @@ async function Boards() {
     sb.from("forum_boards").select("id, title, description, grp").order("sort"),
     sb.from("forum_threads").select("board_id, post_count, last_post_at").limit(5000),
   ]);
+  const admin = user ? (await profileFlags(user.id)).isAdmin : false;
+  const openReports = admin ? ((await serviceDb()?.from("forum_reports").select("id", { count: "exact", head: true }))?.count ?? 0) : 0;
   const stats = new Map<string, { threads: number; posts: number; last: string | null }>();
   for (const t of threads ?? []) {
     const s = stats.get(t.board_id) ?? { threads: 0, posts: 0, last: null };
@@ -42,7 +45,14 @@ async function Boards() {
           <p className="mt-4 max-w-2xl text-lg">Frag Leute, die das Auto fahren, das du suchst. Teile, was bei deinem kaputtgegangen ist und was es gekostet hat.</p>
         </div>
         {user ? (
-          <Link href="/konto" className="text-sm font-medium text-muted-foreground hover:text-foreground">Angemeldet als {user.username}</Link>
+          <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
+            {admin && (
+              <Link href="/forum/moderation" className="rounded-full bg-warn-soft px-4 py-2 hover:underline">
+                Moderation{openReports ? ` (${openReports})` : ""}
+              </Link>
+            )}
+            <Link href="/konto" className="text-muted-foreground hover:text-foreground">Angemeldet als {user.username}</Link>
+          </div>
         ) : (
           <Link href="/konto" className="inline-flex h-11 items-center rounded-full bg-primary px-6 font-medium text-primary-foreground">Anmelden oder Konto erstellen</Link>
         )}

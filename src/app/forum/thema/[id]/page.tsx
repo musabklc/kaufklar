@@ -9,6 +9,14 @@ import { Avatar } from "@/components/forum/avatar";
 import { currentUser, forumEnabled, supabaseUser } from "@/lib/supabase/server";
 import { deletePost, reply, reportPost } from "../../actions";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const id = Number((await params).id);
+  if (!forumEnabled() || !Number.isInteger(id)) return {};
+  const sb = await supabaseUser();
+  const { data } = await sb.from("forum_threads").select("title").eq("id", id).maybeSingle();
+  return data ? { title: `${data.title} – Forum – Tachoklar` } : {};
+}
+
 export default function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:py-16">
@@ -90,7 +98,7 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
           </ActionForm>
         ) : (
           <p className="mt-3">
-            <Link href="/konto" className="font-medium text-brand underline">Melde dich an</Link>, um zu antworten.
+            <Link href={`/konto?weiter=${encodeURIComponent(`/forum/thema/${id}`)}`} className="font-medium text-brand underline">Melde dich an</Link>, um zu antworten.
           </p>
         )}
       </section>

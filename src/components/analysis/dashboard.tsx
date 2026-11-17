@@ -10,6 +10,8 @@ import { buildAnalysis } from "@/lib/analysis/engine";
 import { saveAnalysis, useChecked } from "@/lib/storage";
 import type { AnalysisResult, Comp, Finding, WeakPoint } from "@/lib/types";
 import type { ForumInsight } from "@/lib/analysis/forum-insights";
+import { WatchButton } from "./watch-button";
+import { AskCommunity } from "./ask-community";
 import { CompsInput } from "@/components/intake/comps-input";
 import { ProvenanceBadge } from "./provenance";
 import { CostsSection } from "./costs-section";
@@ -67,6 +69,10 @@ export function Dashboard({ r }: { r: AnalysisResult }) {
           {v.priceEur !== null && <p className="text-3xl font-bold tabular sm:text-5xl">{fmt(v.priceEur)}</p>}
         </div>
         <p className="mt-3 text-lg text-foreground/75">{facts.join(" · ")}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <WatchButton r={r} />
+          <AskCommunity r={r} />
+        </div>
         <EditVehicle r={r} />
         {r.dataNotes.map((n) => (
           <p key={n} className="mt-4 flex items-start gap-2 rounded-2xl bg-card p-3 text-sm">

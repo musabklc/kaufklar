@@ -47,6 +47,30 @@ export async function fetchListingText(raw: string): Promise<string> {
   return `URL: ${url}\n${meta}\n${jsonLd ? `JSON-LD:\n${jsonLd.slice(0, 20000)}\n` : ""}Seitentext:\n${body.slice(0, 60000)}`;
 }
 
+/** Preisalarm: Ist das Inserat noch online, und was kostet es jetzt? null = nicht feststellbar (blockiert, Zeitüberschreitung). */
+export async function checkListing(raw: string): Promise<{ gone: boolean; price: number | null } | null> {
+  let url: URL;
+  try {
+    url = validateListingUrl(raw);
+  } catch {
+    return null;
+  }
+  if (url.hostname.endsWith("mobile.de")) return null; // blockt automatische Abrufe – respektieren
+  try {
+    const { res, url: finalUrl } = await fetchPage(url);
+    if (!res) return null;
+    if (res.status === 404 || res.status === 410) return { gone: true, price: null };
+    // Portale leiten gelöschte Inserate gern auf eine Suchseite um
+    if (/\/(s-autos|lst|suche)\b/.test(finalUrl.pathname) && finalUrl.pathname !== url.pathname) return { gone: true, price: null };
+    if (!res.ok) return null;
+    const html = (await res.text()).slice(0, MAX_BYTES);
+    if (/Anzeige (ist )?nicht mehr verfügbar|Anzeige wurde (gelöscht|deaktiviert)|Inserat (ist )?nicht mehr (verfügbar|aktiv)|nicht mehr online/i.test(html)) return { gone: true, price: null };
+    return { gone: false, price: pagePrice(html) };
+  } catch {
+    return null;
+  }
+}
+
 /** Lädt eine Seite; Redirects nur innerhalb der erlaubten Portale (SSRF-Schutz). */
 async function fetchPage(start: URL): Promise<{ res: Response | null; url: URL }> {
   let url = start;

@@ -81,6 +81,19 @@ export default function Datenschutz() {
       <p>
         Die Forensuche durchsucht nur öffentliche Titel und Beiträge. Suchbegriffe speichern wir nicht.
       </p>
+      <h3>Merkliste, Preisalarm und Benachrichtigungen</h3>
+      <p>
+        Wenn du angemeldet eine Analyse „merkst“, speichern wir sie in deinem Konto (Supabase, Frankfurt), damit du sie auf jedem Gerät öffnen kannst
+        (Art. 6 Abs. 1 lit. b DSGVO). Mit eingeschaltetem Preisalarm öffnet unser Server das Inserat einmal täglich, liest Preis und Status und schickt dir
+        eine E-Mail, wenn der Preis sinkt oder das Inserat verschwindet. Ebenso bekommst du eine E-Mail bei neuen Antworten auf deine Forenthemen
+        (höchstens eine pro Thema und Stunde). Beides kannst du jederzeit abschalten: Preisalarm unter „Meine Analysen“, Antwort-Mails unter „Konto“.
+        Entfernst du ein gemerktes Auto oder löschst du dein Konto, werden die Daten gelöscht.
+      </p>
+      <p>
+        E-Mails (Bestätigung, Passwort, Preisalarm, Antworten) versenden wir über Resend (Resend, Inc., USA; Versand über Server in der EU, Irland).
+        Dabei werden deine E-Mail-Adresse und der Inhalt der Nachricht übermittelt. Grundlage für die Übermittlung in die USA sind die
+        Standardvertragsklauseln der EU-Kommission. Mehr: <A href="https://resend.com/legal/privacy-policy">Datenschutzerklärung von Resend</A>.
+      </p>
       <p>
         Für die Anmeldung setzen wir ein technisch notwendiges Cookie (Sitzung), ohne das der Login nicht funktioniert (§ 25 Abs. 2 Nr. 2 TDDDG).
         Es wird nur gesetzt, wenn du dich anmeldest, und enthält keine Tracking-Daten.

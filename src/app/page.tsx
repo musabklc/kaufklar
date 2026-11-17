@@ -8,11 +8,15 @@ import { PriceGauge } from "@/components/analysis/parts";
 import { TaxCalculator } from "@/components/home/tax-calculator";
 import { aiConfigured } from "@/lib/ai/provider";
 import { KNOWLEDGE } from "@/lib/analysis/knowledge";
+import { forumEnabled, supabaseUser } from "@/lib/supabase/server";
 
 /** Liest die Env-Flags zur Anfragezeit (nicht beim Build), der Rest der Seite bleibt statisch. */
-async function Intake() {
+async function Intake({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await connection();
-  return <IntakeFlow aiEnabled={aiConfigured()} linkEnabled={process.env.LINK_IMPORT_ENABLED === "true"} />;
+  const link = (await searchParams).link;
+  // Geteilter Link ("Teilen → Tachoklar"): nur https, wird sofort ausgelesen
+  const initialUrl = typeof link === "string" && /^https:\/\//.test(link) ? link.slice(0, 2000) : "";
+  return <IntakeFlow aiEnabled={aiConfigured()} linkEnabled={process.env.LINK_IMPORT_ENABLED === "true"} initialUrl={initialUrl} />;
 }
 
 const engines = KNOWLEDGE.filter((k) => k.kind === "motor");
@@ -25,7 +29,7 @@ const CLS_COMPS = [
   { title: "CLS 500 Facelift, LPG-Anlage", detail: "2008 · Privat", price: "7.999 €" },
 ];
 
-export default function Home() {
+export default function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return (
     <>
       {/* Erster Bildschirm: Titel, ein Satz, die Eingabe – daneben ein echtes Auto mit seinem echten Ergebnis */}
@@ -39,7 +43,7 @@ export default function Home() {
           </p>
           <div className="animate-rise mt-8 [animation-delay:160ms]">
             <Suspense fallback={<div className="h-52 animate-pulse rounded-2xl bg-card" />}>
-              <Intake />
+              <Intake searchParams={searchParams} />
             </Suspense>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">Kostenlos, ohne Anmeldung. Für AutoScout24, Kleinanzeigen und mobile.de.</p>
@@ -97,8 +101,8 @@ export default function Home() {
             Ein BMW 320d von 2012 hat andere Probleme als einer von 2016. Tachoklar ordnet Motor und Getriebe zu und nennt Schwachstellen mit Reparaturkosten und woran du sie bei der Besichtigung erkennst. Für jedes andere Modell recherchiert die KI die bekannten Probleme.
           </p>
           <div className="mt-8 grid gap-8 sm:grid-cols-2">
-            <List title="Motoren in der Datenbank" items={engines.map((e) => e.name)} />
-            <List title="Getriebe" items={gearboxes.map((e) => e.name)} />
+            <List title="Motoren in der Datenbank" items={engines} />
+            <List title="Getriebe" items={gearboxes} />
           </div>
           <Link href="/methodik" className="mt-8 inline-block font-semibold text-brand underline-offset-4 hover:underline">So prüfen wir</Link>
         </div>
@@ -129,17 +133,59 @@ export default function Home() {
           <ProvenanceLegend />
         </div>
       </section>
+
+      {/* Behauptung 5: Echte Fahrer helfen – Beweis: die neuesten Forenthemen */}
+      <section className="bg-card">
+        <div className="mx-auto grid *:min-w-0 max-w-[78rem] items-start gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:py-28">
+          <div>
+            <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.03em] sm:text-5xl">Frag Leute, die das Auto fahren.</h2>
+            <p className="mt-6 max-w-lg text-lg">
+              Im Forum erzählen Fahrer, was bei ihrem Auto kaputtgegangen ist und was es gekostet hat. Diese Erfahrungen fließen automatisch in jede passende Analyse ein, unter „Aus dem Forum“.
+            </p>
+            <Link href="/forum" className="mt-8 inline-flex h-12 items-center rounded-full bg-primary px-6 font-medium text-primary-foreground">Zum Forum</Link>
+          </div>
+          <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl bg-background" />}>
+            <LatestThreads />
+          </Suspense>
+        </div>
+      </section>
     </>
   );
 }
 
-function List({ title, items }: { title: string; items: string[] }) {
+/** Neueste Forenthemen (zur Anfragezeit, der Rest der Startseite bleibt statisch). */
+async function LatestThreads() {
+  await connection();
+  if (!forumEnabled()) return null;
+  const sb = await supabaseUser();
+  const { data } = await sb.from("forum_threads").select("id, title, post_count, board:forum_boards(title)").order("last_post_at", { ascending: false }).limit(5);
+  if (!data?.length)
+    return <p className="rounded-3xl bg-background p-6 text-lg">Noch ist es ruhig. <Link href="/forum" className="font-medium text-brand underline">Stell die erste Frage</Link> zu deinem Auto.</p>;
+  return (
+    <ul className="space-y-3">
+      {data.map((t) => (
+        <li key={t.id}>
+          <Link href={`/forum/thema/${t.id}`} className="block rounded-2xl bg-background px-5 py-4 transition-transform hover:-translate-y-0.5">
+            <span className="font-semibold">{t.title}</span>
+            <span className="mt-1 block text-sm text-muted-foreground">
+              {(t.board as unknown as { title: string } | null)?.title} · {t.post_count} {t.post_count === 1 ? "Beitrag" : "Beiträge"}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function List({ title, items }: { title: string; items: { id: string; name: string }[] }) {
   return (
     <div>
       <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
       <ul className="mt-3 space-y-2">
         {items.map((i) => (
-          <li key={i} className="font-medium leading-snug">{i}</li>
+          <li key={i.id} className="font-medium leading-snug">
+            <Link href={`/schwachstellen/${i.id}`} className="underline-offset-4 hover:text-brand hover:underline">{i.name}</Link>
+          </li>
         ))}
       </ul>
     </div>

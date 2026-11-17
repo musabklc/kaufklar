@@ -7,7 +7,8 @@ import { ActionForm, labelCls } from "@/components/forum/action-form";
 import { currentUser, forumEnabled } from "@/lib/supabase/server";
 import { Avatar } from "@/components/forum/avatar";
 import { AvatarUpload } from "@/components/forum/avatar-upload";
-import { deleteAccount, removeAvatar, requestReset, signIn, signOut, signUp, updateCar, uploadAvatar } from "./actions";
+import { deleteAccount, removeAvatar, requestReset, setNotifyReplies, signIn, signOut, signUp, updateCar, uploadAvatar } from "./actions";
+import { profileFlags } from "@/lib/server/forum-admin";
 
 export const metadata = { title: "Konto – Tachoklar" };
 
@@ -28,7 +29,7 @@ async function Konto({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   if (!forumEnabled()) return <p>Das Forum ist auf diesem Server noch nicht eingerichtet.</p>;
   const user = await currentUser();
-  if (user) return <Account username={user.username} email={user.email} car={user.car} avatarPath={user.avatarPath} />;
+  if (user) return <Account username={user.username} email={user.email} car={user.car} avatarPath={user.avatarPath} notify={(await profileFlags(user.id)).notifyReplies} />;
   return (
     <>
       <h1 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">Mitmachen im Forum</h1>
@@ -38,6 +39,7 @@ async function Konto({ searchParams }: { searchParams: SP }) {
         <section className="rounded-3xl bg-card p-6 sm:p-8">
           <h2 className="text-2xl font-semibold">Anmelden</h2>
           <ActionForm action={signIn} submit="Anmelden" className="mt-6 space-y-4">
+            {typeof sp.weiter === "string" && <input type="hidden" name="weiter" value={sp.weiter.slice(0, 6000)} />}
             <label className={labelCls}>E-Mail<Input name="email" type="email" autoComplete="email" required className="h-11" /></label>
             <label className={labelCls}>Passwort<Input name="password" type="password" autoComplete="current-password" required className="h-11" /></label>
           </ActionForm>
@@ -75,7 +77,7 @@ async function Konto({ searchParams }: { searchParams: SP }) {
   );
 }
 
-function Account({ username, email, car, avatarPath }: { username: string | null; email: string | null; car: string | null; avatarPath: string | null }) {
+function Account({ username, email, car, avatarPath, notify }: { username: string | null; email: string | null; car: string | null; avatarPath: string | null; notify: boolean }) {
   return (
     <>
       <div className="flex items-center gap-5">
@@ -113,6 +115,20 @@ function Account({ username, email, car, avatarPath }: { username: string | null
             <Input name="car" defaultValue={car ?? ""} maxLength={60} className="h-11" />
           </label>
         </ActionForm>
+      </section>
+
+      <section className="mt-6 max-w-xl rounded-3xl bg-card p-6 sm:p-8">
+        <h2 className="text-2xl font-semibold">Benachrichtigungen</h2>
+        <p className="mt-2">
+          E-Mail bei neuen Antworten auf deine Themen (höchstens eine pro Thema und Stunde): <strong>{notify ? "an" : "aus"}</strong>
+        </p>
+        <form action={setNotifyReplies} className="mt-4">
+          <input type="hidden" name="on" value={notify ? "0" : "1"} />
+          <Button type="submit" variant="outline" className="h-11 px-5">{notify ? "Ausschalten" : "Einschalten"}</Button>
+        </form>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Preisalarme für gemerkte Autos schaltest du unter <Link href="/analysen" className="text-brand underline">Meine Analysen</Link> ein oder aus.
+        </p>
       </section>
 
       <section className="mt-6 max-w-xl rounded-3xl bg-card p-6 sm:p-8">
