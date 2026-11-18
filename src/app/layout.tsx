@@ -52,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <Link href="/finder" className="hover:underline">Auto-Finder</Link>
                 <Link href="/wert" className="hover:underline">Auto-Wert</Link>
                 <Link href="/garage" className="hover:underline">Meine Garage</Link>
+                <Link href="/gebrauchtwagen-pruefen" className="hover:underline">Gebrauchtwagen prüfen</Link>
                 <Link href="/schwachstellen" className="hover:underline">Schwachstellen</Link>
                 <Link href="/melden" className="hover:underline">Problem melden</Link>
                 <Link href="/methodik" className="hover:underline">Methodik & Quellen</Link>

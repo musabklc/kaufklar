@@ -29,7 +29,13 @@ const CLS_COMPS = [
   { title: "CLS 500 Facelift, LPG-Anlage", detail: "2008 · Privat", price: "7.999 €" },
 ];
 
-export const metadata = { alternates: { canonical: "/" } };
+export const metadata = {
+  // Suchbegriff zuerst: so suchen Käufer ("Gebrauchtwagen prüfen", "Gebrauchtwagen Check")
+  title: { absolute: "Gebrauchtwagen prüfen – kostenloser Online-Check vor dem Kauf | Tachoklar" },
+  description:
+    "Gebrauchtwagen online prüfen: Inserat-Link oder Screenshot einfügen und in einer Minute Schwachstellen des Motors, Reparaturkosten, echten Marktpreis und Fragen an den Verkäufer sehen. Kostenlos, ohne Anmeldung.",
+  alternates: { canonical: "/" },
+};
 
 export default function Home({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return (
@@ -41,7 +47,7 @@ export default function Home({ searchParams }: { searchParams: Promise<Record<st
             Gebrauchtwagen? Erst prüfen.
           </h1>
           <p className="animate-rise mt-6 max-w-xl text-xl leading-snug text-foreground/85 [animation-delay:80ms]">
-            Link oder Screenshot vom Inserat einfügen. In einer Minute siehst du die Schwachstellen des Motors, den echten Marktpreis und was du den Verkäufer fragen musst.
+            Gebrauchtwagen online prüfen: Link oder Screenshot vom Inserat einfügen. In einer Minute siehst du die Schwachstellen des Motors, den echten Marktpreis und was du den Verkäufer fragen musst.
           </p>
           <div className="animate-rise mt-8 [animation-delay:160ms]">
             <Suspense fallback={<div className="h-52 animate-pulse rounded-2xl bg-card" />}>
@@ -51,6 +57,7 @@ export default function Home({ searchParams }: { searchParams: Promise<Record<st
           <p className="mt-4 text-sm text-muted-foreground">Kostenlos, ohne Anmeldung. Für AutoScout24, Kleinanzeigen und mobile.de.</p>
           <p className="mt-3 text-sm">
             Noch kein Inserat? <Link href="/finder" className="font-medium text-brand underline-offset-4 hover:underline">Auto-Finder</Link>
+            {" · "}<Link href="/gebrauchtwagen-pruefen" className="font-medium text-brand underline-offset-4 hover:underline">Checkliste für die Besichtigung</Link>
             {" · "}Eigenes Auto verkaufen? <Link href="/wert" className="font-medium text-brand underline-offset-4 hover:underline">Wert ermitteln</Link>
           </p>
         </div>

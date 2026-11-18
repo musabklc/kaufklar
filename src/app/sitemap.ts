@@ -29,7 +29,7 @@ async function guideUrls(): Promise<MetadataRoute.Sitemap> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages = ["", "/forum", "/forum/regeln", "/schwachstellen", "/finder", "/wert", "/melden", "/methodik", "/datenschutz", "/impressum"];
+  const pages = ["", "/gebrauchtwagen-pruefen", "/forum", "/forum/regeln", "/schwachstellen", "/finder", "/wert", "/melden", "/methodik", "/datenschutz", "/impressum"];
   return [
     ...[...pages, ...KNOWLEDGE.map((e) => `/schwachstellen/${e.id}`)].map((p) => ({ url: `${SITE_URL}${p}` })),
     ...(await guideUrls().catch(() => [])),
