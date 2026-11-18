@@ -515,7 +515,13 @@ function RecallsSection({ r }: { r: AnalysisResult }) {
           In der EU-Rückrufdatenbank Safety Gate haben wir keinen passenden Pkw-Rückruf gefunden. Rückrufe können trotzdem existieren – lass sie dir beim Markenhändler per Fahrgestellnummer (FIN) bestätigen.
         </p>
       ) : (
-        <ul>
+        // Eingeklappt: die Details sind lang und nur auf Wunsch interessant
+        <details className="group">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 font-medium text-brand [&::-webkit-details-marker]:hidden">
+          {r.recalls.length} passende{r.recalls.length === 1 ? "r Rückruf" : " Rückrufe"} gefunden – anzeigen
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <ul className="mt-4">
           {r.recalls.map((c) => (
             <li key={c.case_number} className="grid gap-x-8 gap-y-2 border-b border-border py-5 first:pt-0 last:border-0 sm:grid-cols-[1fr_auto]">
               <div className="min-w-0">
@@ -532,6 +538,7 @@ function RecallsSection({ r }: { r: AnalysisResult }) {
             </li>
           ))}
         </ul>
+        </details>
       )}
       <p className="mt-4 text-xs text-foreground/70">Quelle: EU Safety Gate, Europäische Kommission (CC BY 4.0). Ob ein Rückruf an diesem Fahrzeug erledigt wurde, weiß nur der Hersteller – per FIN prüfen lassen.</p>
     </Section>
