@@ -567,7 +567,8 @@ export const KNOWLEDGE: KbEntry[] = [
     name: "ZF 8HP (8-Gang-Automatik)",
     kind: "getriebe",
     matchNote: "Vermutet aus BMW mit Automatik ab 2010 (Ausnahme: frontgetriebene Modelle mit anderem Getriebe) oder Audi Tiptronic. Getriebetyp über FIN prüfen.",
-    match: (c) => c.auto && ((c.make === "bmw" && (c.year ?? 0) >= 2010 && !/active tourer|gran tourer|x1|x2|1er|2er/.test(`${c.model} ${c.variant}`)) || /8hp|tiptronic/.test(c.gearbox)),
+    // BMW-Doppelkupplung (DKG/DCT) und SMG sind keine ZF-Wandlerautomatik
+    match: (c) => c.auto && ((c.make === "bmw" && (c.year ?? 0) >= 2010 && !/active tourer|gran tourer|x1|x2|1er|2er/.test(`${c.model} ${c.variant}`) && !/dkg|dct|smg|doppelkupplung/.test(c.gearbox)) || /8hp|tiptronic/.test(c.gearbox)),
     weakPoints: [
       {
         id: "8hp-oel",

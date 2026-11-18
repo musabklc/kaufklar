@@ -135,3 +135,9 @@ test("Nachrichten an den Verkäufer: kurz, nie leer, höchstens 3 Fragen, kein T
   assert.equal(noPrice.negotiation, null);
   assert.ok(noPrice.contactMessage!.length > 50);
 });
+
+test("BMW mit Doppelkupplung (DKG) bekommt keine ZF-8HP-Schwachstellen", () => {
+  const dkg = matchKnowledge({ ...base, model: "335", variant: "335i E93 LCI DKG", transmissionDetail: "DKG", displacementCcm: 2979, fuel: "Benzin" }).map((e) => e.name);
+  assert.ok(!dkg.some((n) => n.includes("8HP")));
+  assert.ok(matchKnowledge(base).some((e) => e.name.includes("8HP")));
+});
